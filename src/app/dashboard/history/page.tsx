@@ -76,44 +76,46 @@ export default async function HistoryPage() {
       </div>
 
       {dumps.length > 0 ? (
-        <div className="animate-fade-in-up space-y-2">
-          {dumps.map((dump) => {
-            const statusInfo = STATUS_BADGE[dump.status] ?? STATUS_BADGE.DRAFT;
-            const doneCount = dump.tasks.length;
-            const totalCount = dump._count.tasks;
-            return (
-              <Link key={dump.id} href={`/dashboard/dump/${dump.id}`}>
-                <Card className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20">
-                  <CardContent className="flex items-center gap-4 py-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-lg">
+        <Card className="animate-fade-in-up">
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {dumps.map((dump) => {
+                const statusInfo = STATUS_BADGE[dump.status] ?? STATUS_BADGE.DRAFT;
+                const doneCount = dump.tasks.length;
+                const totalCount = dump._count.tasks;
+                return (
+                  <Link
+                    key={dump.id}
+                    href={`/dashboard/dump/${dump.id}`}
+                    className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50"
+                  >
+                    <span className="text-base leading-none">
                       {SOURCE_ICON[dump.source] ?? "📝"}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {dump.title || "Brain Dump"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {totalCount}{" "}
-                        {totalCount === 1 ? "tarea" : "tareas"}
-                        {doneCount > 0 && ` · ${doneCount} completadas`}
-                        {" · "}
-                        {new Date(dump.createdAt).toLocaleDateString("es-ES", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {dump.title || "Brain Dump"}
+                    </span>
+                    <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                      {totalCount} {totalCount === 1 ? "tarea" : "tareas"}
+                      {doneCount > 0 && ` · ${doneCount} ✓`}
+                    </span>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {new Date(dump.createdAt).toLocaleDateString("es-ES", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <Badge variant={statusInfo.variant} className="text-[10px] px-1.5 py-0">
+                      {statusInfo.label}
+                    </Badge>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40" />
+                  </Link>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <Card className="animate-fade-in-up border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
