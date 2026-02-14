@@ -3,9 +3,10 @@
 // ============================================================
 // Global Error Boundary — Captures unhandled errors with Sentry
 // ============================================================
+import { useEffect } from "react";
 
 import * as Sentry from "@sentry/nextjs";
-import { useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
@@ -21,7 +22,7 @@ export default function GlobalError({
 
   return (
     <html lang="es">
-      <body className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <body className="bg-background text-foreground flex min-h-screen items-center justify-center">
         <div className="mx-auto max-w-md space-y-4 p-8 text-center">
           <h2 className="text-2xl font-bold">Algo salió mal</h2>
           <p className="text-muted-foreground">

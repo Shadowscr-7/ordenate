@@ -1,14 +1,16 @@
 // ============================================================
 // Audio Transcription with OpenAI Whisper API
 // ============================================================
-
 import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function transcribeAudio(audioBuffer: Buffer, mimeType: string): Promise<{ text: string }> {
+export async function transcribeAudio(
+  audioBuffer: Buffer,
+  mimeType: string,
+): Promise<{ text: string }> {
   try {
     // Determine file extension from mime type
     let extension = "ogg";
@@ -30,7 +32,7 @@ export async function transcribeAudio(audioBuffer: Buffer, mimeType: string): Pr
     return { text: transcription.text };
   } catch (error) {
     console.error("[Whisper API] Transcription error:", error);
-    
+
     if (error instanceof Error) {
       if (error.message.includes("API key")) {
         throw new Error("OPENAI_API_KEY not configured");
@@ -42,7 +44,7 @@ export async function transcribeAudio(audioBuffer: Buffer, mimeType: string): Pr
         throw new Error("Model not available");
       }
     }
-    
+
     throw new Error("Failed to transcribe audio");
   }
 }

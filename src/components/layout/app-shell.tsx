@@ -5,11 +5,12 @@
 "use client";
 
 import { useState } from "react";
+
 import { motion } from "framer-motion";
 
+import { CommandPalette } from "@/components/dashboard/command-palette";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { CommandPalette } from "@/components/dashboard/command-palette";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface AppShellProps {

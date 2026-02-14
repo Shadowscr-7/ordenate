@@ -5,28 +5,25 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bot,
-  Copy,
-  Check,
-  Smartphone,
-  QrCode,
-  ExternalLink,
-  Unlink,
-  MessageSquare,
-  Camera,
-} from "lucide-react";
+
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Bot,
+  Camera,
+  Check,
+  Copy,
+  ExternalLink,
+  MessageSquare,
+  QrCode,
+  Smartphone,
+  Unlink,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +32,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 
 interface TelegramLinkProps {
   userId: string;
@@ -84,7 +80,7 @@ export function TelegramLink({
         <Card
           className={`group cursor-pointer transition-all duration-300 hover:shadow-lg ${
             isLinked
-              ? "border-green-500/20 hover:shadow-green-500/10 hover:border-green-500/40"
+              ? "border-green-500/20 hover:border-green-500/40 hover:shadow-green-500/10"
               : "hover:shadow-primary/10 hover:border-primary/30"
           }`}
         >
@@ -104,7 +100,7 @@ export function TelegramLink({
                 {isLinked ? (
                   <Badge
                     variant="default"
-                    className="bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/20"
+                    className="border-green-500/20 bg-green-500/15 text-green-600 dark:text-green-400"
                   >
                     <Check className="mr-1 h-3 w-3" />
                     Vinculado
@@ -160,25 +156,29 @@ export function TelegramLink({
 
             <div className="space-y-5 pt-4">
               {/* What you can do */}
-              <div className="space-y-3 rounded-xl border bg-accent/30 p-4">
+              <div className="bg-accent/30 space-y-3 rounded-xl border p-4">
                 <h4 className="text-sm font-semibold">Qué puedes hacer:</h4>
-                <ul className="space-y-3 text-sm text-muted-foreground">
+                <ul className="text-muted-foreground space-y-3 text-sm">
                   <li className="flex items-start gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                    <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
+                      <MessageSquare className="text-primary h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Enviar texto</p>
-                      <p className="text-xs">Escribe al bot y se crea un brain dump automáticamente</p>
+                      <p className="text-foreground font-medium">Enviar texto</p>
+                      <p className="text-xs">
+                        Escribe al bot y se crea un brain dump automáticamente
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Camera className="h-3.5 w-3.5 text-primary" />
+                    <div className="bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
+                      <Camera className="text-primary h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Enviar fotos</p>
-                      <p className="text-xs">Fotos de notas o pizarras se procesan como brain dumps</p>
+                      <p className="text-foreground font-medium">Enviar fotos</p>
+                      <p className="text-xs">
+                        Fotos de notas o pizarras se procesan como brain dumps
+                      </p>
                     </div>
                   </li>
                 </ul>
@@ -187,14 +187,10 @@ export function TelegramLink({
               {/* Open in Telegram button */}
               <Button
                 variant="default"
-                className="w-full bg-[#0088cc] hover:bg-[#0077b5] text-white"
+                className="w-full bg-[#0088cc] text-white hover:bg-[#0077b5]"
                 asChild
               >
-                <a
-                  href={`https://t.me/${botUsername}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href={`https://t.me/${botUsername}`} target="_blank" rel="noopener noreferrer">
                   <Bot className="mr-2 h-4 w-4" />
                   Abrir chat en Telegram
                   <ExternalLink className="ml-2 h-3 w-3" />
@@ -207,9 +203,7 @@ export function TelegramLink({
                   <div className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    opciones
-                  </span>
+                  <span className="bg-card text-muted-foreground px-2">opciones</span>
                 </div>
               </div>
 
@@ -259,7 +253,7 @@ export function TelegramLink({
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center"
               >
-                <div className="relative rounded-2xl border-2 border-primary/20 bg-white p-4 shadow-lg shadow-primary/5">
+                <div className="border-primary/20 shadow-primary/5 relative rounded-2xl border-2 bg-white p-4 shadow-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={qrDataUrl}
@@ -269,7 +263,7 @@ export function TelegramLink({
                     className="rounded-lg"
                   />
                 </div>
-                <p className="mt-3 text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-3 text-center text-xs">
                   Escanea con la cámara de tu teléfono
                 </p>
               </motion.div>
@@ -280,24 +274,17 @@ export function TelegramLink({
                   <div className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    o usa el código
-                  </span>
+                  <span className="bg-card text-muted-foreground px-2">o usa el código</span>
                 </div>
               </div>
 
               {/* Link code */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 rounded-lg border bg-muted/50 px-4 py-3 font-mono text-lg font-bold tracking-wider text-primary">
+                  <div className="bg-muted/50 text-primary flex-1 rounded-lg border px-4 py-3 font-mono text-lg font-bold tracking-wider">
                     {linkCode}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCopy}
-                    className="shrink-0"
-                  >
+                  <Button variant="outline" size="icon" onClick={handleCopy} className="shrink-0">
                     <AnimatePresence mode="wait">
                       {copied ? (
                         <motion.div
@@ -321,19 +308,19 @@ export function TelegramLink({
                     </AnimatePresence>
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Envía este código al bot{" "}
-                  <span className="font-medium text-primary">@{botUsername}</span>{" "}
-                  en Telegram para vincular tu cuenta.
+                  <span className="text-primary font-medium">@{botUsername}</span> en Telegram para
+                  vincular tu cuenta.
                 </p>
               </div>
 
               {/* Steps */}
-              <div className="space-y-3 rounded-xl border bg-accent/30 p-4">
+              <div className="bg-accent/30 space-y-3 rounded-xl border p-4">
                 <h4 className="text-sm font-semibold">Pasos:</h4>
-                <ol className="space-y-2 text-sm text-muted-foreground">
+                <ol className="text-muted-foreground space-y-2 text-sm">
                   <li className="flex items-start gap-2">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    <span className="bg-primary/10 text-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                       1
                     </span>
                     Escanea el QR o abre{" "}
@@ -341,20 +328,20 @@ export function TelegramLink({
                       href={telegramDeepLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                      className="text-primary inline-flex items-center gap-1 hover:underline"
                     >
                       el enlace
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    <span className="bg-primary/10 text-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                       2
                     </span>
                     Presiona &quot;Iniciar&quot; en el bot de Telegram
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    <span className="bg-primary/10 text-primary flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                       3
                     </span>
                     ¡Listo! Envía texto o fotos al bot para crear brain dumps
@@ -364,11 +351,7 @@ export function TelegramLink({
 
               {/* Direct link button */}
               <Button variant="outline" className="w-full" asChild>
-                <a
-                  href={telegramDeepLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href={telegramDeepLink} target="_blank" rel="noopener noreferrer">
                   <Smartphone className="mr-2 h-4 w-4" />
                   Abrir en Telegram
                   <ExternalLink className="ml-2 h-3 w-3" />
@@ -378,7 +361,7 @@ export function TelegramLink({
               {showRelink && (
                 <Button
                   variant="ghost"
-                  className="w-full text-muted-foreground"
+                  className="text-muted-foreground w-full"
                   size="sm"
                   onClick={() => setShowRelink(false)}
                 >

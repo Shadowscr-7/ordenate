@@ -1,15 +1,11 @@
 // ============================================================
 // Eisenhower Tasks API — All tasks for the board
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+
+import { apiServerError, apiSuccess, apiUnauthorized } from "@/lib/api-response";
 import { getSession } from "@/lib/auth/actions";
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiServerError,
-} from "@/lib/api-response";
+import { db } from "@/lib/db";
 
 // GET /api/eisenhower — get all non-hidden tasks grouped for the board
 export async function GET(request: NextRequest) {

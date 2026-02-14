@@ -3,7 +3,6 @@
 // ============================================================
 // Safe to use in client components. Uses anon key only.
 // ============================================================
-
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {

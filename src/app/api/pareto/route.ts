@@ -1,15 +1,11 @@
 // ============================================================
 // Pareto Tasks API — Fetch tasks for Pareto focus view
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+
+import { apiServerError, apiSuccess, apiUnauthorized } from "@/lib/api-response";
 import { getSession } from "@/lib/auth/actions";
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiServerError,
-} from "@/lib/api-response";
+import { db } from "@/lib/db";
 
 // GET /api/pareto — get all non-hidden tasks with Pareto info
 export async function GET(_request: NextRequest) {
@@ -29,10 +25,7 @@ export async function GET(_request: NextRequest) {
         brainDump: { workspaceId },
         status: { not: "HIDDEN" },
       },
-      orderBy: [
-        { isPareto: "desc" },
-        { sortOrder: "asc" },
-      ],
+      orderBy: [{ isPareto: "desc" }, { sortOrder: "asc" }],
       include: {
         brainDump: {
           select: { id: true, title: true },

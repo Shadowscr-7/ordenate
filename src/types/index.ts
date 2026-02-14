@@ -88,7 +88,10 @@ export const TASK_STATUS_META: Record<TaskStatus, { label: string; color: string
 
 // ─── Plan Limits ────────────────────────────────────────────
 
-export const PLAN_LIMITS: Record<SubscriptionPlan, { maxDumpsPerMonth: number; features: string[] }> = {
+export const PLAN_LIMITS: Record<
+  SubscriptionPlan,
+  { maxDumpsPerMonth: number; features: string[] }
+> = {
   BASIC: {
     maxDumpsPerMonth: 10,
     features: ["Brain Dumps de texto", "Tablero Eisenhower"],

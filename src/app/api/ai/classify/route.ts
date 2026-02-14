@@ -1,18 +1,19 @@
 // ============================================================
 // AI Classify API — Suggest Eisenhower quadrants for tasks
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { getSession } from "@/lib/auth/actions";
+
 import { classifyTasks } from "@/lib/ai";
 import {
+  apiError,
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
 import { aiLimiter, getClientIp } from "@/lib/rate-limit";
 
 const classifyInputSchema = z.object({
@@ -26,10 +27,7 @@ const classifyInputSchema = z.object({
 
 const schema = z.object({
   tasks: z
-    .union([
-      z.array(z.string().min(1).max(1000)),
-      z.array(classifyInputSchema),
-    ])
+    .union([z.array(z.string().min(1).max(1000)), z.array(classifyInputSchema)])
     .refine((arr) => arr.length >= 1 && arr.length <= 100, {
       message: "Se requiere entre 1 y 100 tareas",
     }),

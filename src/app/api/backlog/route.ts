@@ -5,19 +5,20 @@
 // POST   /api/backlog         → Create new backlog task
 // DELETE /api/backlog?id=xxx  → Delete a backlog task
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
+import { z } from "zod";
+
 import {
-  apiSuccess,
   apiError,
+  apiServerError,
+  apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
 import { apiLimiter, getClientIp } from "@/lib/rate-limit";
-import { z } from "zod";
 
 // ─── GET: List backlog tasks ─────────────────────────────────
 
@@ -47,9 +48,7 @@ export async function GET(_request: NextRequest) {
         workspaceId,
         status: "PENDING",
       },
-      orderBy: [
-        { createdAt: "desc" },
-      ],
+      orderBy: [{ createdAt: "desc" }],
     });
 
     return apiSuccess({

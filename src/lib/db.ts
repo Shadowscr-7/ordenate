@@ -4,7 +4,6 @@
 // Prevents multiple instances in development due to hot reload.
 // Optimized for performance with connection pooling.
 // ============================================================
-
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -12,9 +11,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Use direct connection in development for better reliability
-const databaseUrl = process.env.NODE_ENV === "development" 
-  ? process.env.DIRECT_URL 
-  : process.env.DATABASE_URL;
+const databaseUrl =
+  process.env.NODE_ENV === "development" ? process.env.DIRECT_URL : process.env.DATABASE_URL;
 
 export const db =
   globalForPrisma.prisma ??

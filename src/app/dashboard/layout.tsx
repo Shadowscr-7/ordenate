@@ -1,17 +1,13 @@
 // ============================================================
 // Dashboard Layout — Protected area with sidebar + header
 // ============================================================
-
 import { redirect } from "next/navigation";
 
-import { getSession, getCurrentUser } from "@/lib/auth/actions";
+import { getCurrentUser, getSession } from "@/lib/auth/actions";
+
 import { AppShell } from "@/components/layout/app-shell";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   // First check Supabase auth session
   const session = await getSession();
   if (!session) {

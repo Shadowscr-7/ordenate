@@ -4,20 +4,21 @@
 // POST /api/backlog/create-dump
 // Body: { taskIds: string[], title: string, useAI?: boolean }
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
+import { z } from "zod";
+
+import { classifyTasks } from "@/lib/ai";
 import {
-  apiSuccess,
   apiError,
+  apiServerError,
+  apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
 import { apiLimiter, getClientIp } from "@/lib/rate-limit";
-import { classifyTasks } from "@/lib/ai";
-import { z } from "zod";
 
 const createDumpFromBacklogSchema = z.object({
   taskIds: z.array(z.string()).min(1, "Debes seleccionar al menos una tarea"),
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     let aiClassifications: { text: string; quadrant: string }[] = [];
     if (useAI) {
       try {
-        const taskTexts = backlogTasks.map((t: any) => t.text);
+        const taskTexts = backlogTasks.map((t) => t.text);
         const classified = await classifyTasks(taskTexts);
         aiClassifications = classified.tasks;
       } catch (error) {
@@ -83,16 +84,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare tasks
-    const tasksToCreate = backlogTasks.map((backlogTask: any, index: number) => {
+    const tasksToCreate = backlogTasks.map((backlogTask, index: number) => {
       // Use existing quadrant or AI classification
       let quadrant = backlogTask.quadrant;
-      
+
       if (useAI && !quadrant) {
         const aiClassification = aiClassifications.find(
-          (c) => c.text.toLowerCase().trim() === backlogTask.text.toLowerCase().trim()
+          (c) => c.text.toLowerCase().trim() === backlogTask.text.toLowerCase().trim(),
         );
         if (aiClassification) {
-          quadrant = aiClassification.quadrant as "Q1_DO" | "Q2_SCHEDULE" | "Q3_DELEGATE" | "Q4_DELETE";
+          quadrant = aiClassification.quadrant as
+            | "Q1_DO"
+            | "Q2_SCHEDULE"
+            | "Q3_DELEGATE"
+            | "Q4_DELETE";
         }
       }
 
@@ -109,7 +114,7 @@ export async function POST(request: NextRequest) {
       const dump = await tx.brainDump.create({
         data: {
           title,
-          rawText: backlogTasks.map((t: any) => t.text).join("\n"),
+          rawText: backlogTasks.map((t) => t.text).join("\n"),
           source: "WEB",
           status: "PROCESSED",
           workspaceId,
@@ -135,10 +140,13 @@ export async function POST(request: NextRequest) {
       return dump;
     });
 
-    return apiSuccess({
-      brainDump,
-      taskCount: brainDump.tasks.length,
-    }, 201);
+    return apiSuccess(
+      {
+        brainDump,
+        taskCount: brainDump.tasks.length,
+      },
+      201,
+    );
   } catch (error) {
     console.error("[Backlog Create Dump API] error:", error);
     return apiServerError(error);

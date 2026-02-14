@@ -4,7 +4,6 @@
 // Takes messy text (brain dump style) and returns a structured
 // list of clean, actionable task strings.
 // ============================================================
-
 import { getOpenAI } from "./openai";
 
 export interface NormalizeResult {
@@ -68,9 +67,7 @@ export async function normalizeText(rawText: string): Promise<NormalizeResult> {
   }
 
   return {
-    tasks: parsed.tasks.filter(
-      (t: unknown) => typeof t === "string" && t.trim().length > 0,
-    ),
+    tasks: parsed.tasks.filter((t: unknown) => typeof t === "string" && t.trim().length > 0),
     title: typeof parsed.title === "string" ? parsed.title : null,
   };
 }

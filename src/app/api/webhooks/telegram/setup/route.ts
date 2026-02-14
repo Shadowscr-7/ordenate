@@ -4,9 +4,9 @@
 // GET /api/webhooks/telegram/setup → Registers the webhook
 // GET /api/webhooks/telegram/setup?info=1 → Shows current webhook info
 // ============================================================
-
 import { NextRequest, NextResponse } from "next/server";
-import { setWebhook, getWebhookInfo } from "@/lib/telegram";
+
+import { getWebhookInfo, setWebhook } from "@/lib/telegram";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
   // Register webhook
   const appUrl = searchParams.get("url") || process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) {
-    return NextResponse.json(
-      { error: "No APP_URL configured" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "No APP_URL configured" }, { status: 400 });
   }
 
   const webhookUrl = `${appUrl}/api/webhooks/telegram`;

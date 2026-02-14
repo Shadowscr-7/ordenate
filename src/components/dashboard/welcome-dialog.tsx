@@ -5,11 +5,14 @@
 "use client";
 
 import { useState } from "react";
+
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Brain, Kanban, Sparkles, Target, Zap } from "lucide-react";
 
 import { ROUTES } from "@/lib/constants";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,21 +26,24 @@ const STEPS = [
   {
     icon: Brain,
     title: "Vacía tu mente",
-    description: "Escribe todo lo que tengas en la cabeza — tareas, ideas, preocupaciones. Sin orden, sin filtro.",
+    description:
+      "Escribe todo lo que tengas en la cabeza — tareas, ideas, preocupaciones. Sin orden, sin filtro.",
     color: "text-primary",
     bg: "from-primary/10 to-cyan-400/10",
   },
   {
     icon: Sparkles,
     title: "La IA organiza",
-    description: "Nuestra IA limpia el texto, normaliza las tareas y sugiere en qué cuadrante Eisenhower va cada una.",
+    description:
+      "Nuestra IA limpia el texto, normaliza las tareas y sugiere en qué cuadrante Eisenhower va cada una.",
     color: "text-amber-500",
     bg: "from-amber-400/10 to-orange-400/10",
   },
   {
     icon: Kanban,
     title: "Prioriza con Eisenhower",
-    description: "Arrastra las tareas entre los 4 cuadrantes: Hacer, Programar, Delegar y Eliminar.",
+    description:
+      "Arrastra las tareas entre los 4 cuadrantes: Hacer, Programar, Delegar y Eliminar.",
     color: "text-green-500",
     bg: "from-green-400/10 to-emerald-400/10",
   },
@@ -82,12 +88,14 @@ export function WelcomeDialog({ userName }: WelcomeDialogProps) {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center gap-4 py-4"
           >
-            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${current.bg}`}>
+            <div
+              className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${current.bg}`}
+            >
               <current.icon className={`h-8 w-8 ${current.color}`} />
             </div>
             <div className="text-center">
               <h3 className="mb-1 text-lg font-semibold">{current.title}</h3>
-              <p className="text-sm text-muted-foreground">{current.description}</p>
+              <p className="text-muted-foreground text-sm">{current.description}</p>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -98,7 +106,7 @@ export function WelcomeDialog({ userName }: WelcomeDialogProps) {
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all ${
-                i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/20"
+                i === step ? "bg-primary w-6" : "bg-muted-foreground/20 w-1.5"
               }`}
             />
           ))}
@@ -118,7 +126,7 @@ export function WelcomeDialog({ userName }: WelcomeDialogProps) {
           ) : (
             <Button
               asChild
-              className="w-full bg-gradient-to-r from-primary to-cyan-500 text-white"
+              className="from-primary w-full bg-gradient-to-r to-cyan-500 text-white"
               onClick={() => setOpen(false)}
             >
               <Link href={ROUTES.NEW_DUMP}>

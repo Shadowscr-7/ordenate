@@ -5,30 +5,27 @@
 //   /start OD-XXXX  → Links Telegram account
 //   Text message    → Extract tasks → Ask destination (brain/backlog)
 //   Photo messages  → OCR → Extract tasks → Ask destination
-//   Voice/Audio     → Transcribe → Extract tasks → Review → Ask destination 
+//   Voice/Audio     → Transcribe → Extract tasks → Review → Ask destination
 // ============================================================
-
 import { NextRequest, NextResponse } from "next/server";
+
+import { extractTextFromImage, normalizeText, transcribeAudio } from "@/lib/ai";
 import { db } from "@/lib/db";
+import { hasProAccess } from "@/lib/plan-gate";
 import {
   type TelegramUpdate,
-  sendMessage,
-  sendMessageWithKeyboard,
   answerCallbackQuery,
   editMessageText,
   extractLinkCode,
   getFileUrl,
+  sendMessage,
+  sendMessageWithKeyboard,
 } from "@/lib/telegram";
-import { normalizeText, extractTextFromImage, transcribeAudio } from "@/lib/ai";
-import { hasProAccess } from "@/lib/plan-gate";
-import { setPendingSession, getPendingSession, clearPendingSession } from "@/lib/telegram-sessions";
+import { clearPendingSession, getPendingSession, setPendingSession } from "@/lib/telegram-sessions";
 
 export async function POST(request: NextRequest) {
   const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
-  if (
-    process.env.TELEGRAM_WEBHOOK_SECRET &&
-    secretToken !== process.env.TELEGRAM_WEBHOOK_SECRET
-  ) {
+  if (process.env.TELEGRAM_WEBHOOK_SECRET && secretToken !== process.env.TELEGRAM_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -214,7 +211,7 @@ async function handleTextMessage(chatId: number, text: string) {
   if (session) {
     // User is providing the brain dump name
     const brainName = text.trim();
-    
+
     try {
       // Create brain dump with tasks
       await db.brainDump.create({
@@ -256,10 +253,7 @@ async function handleTextMessage(chatId: number, text: string) {
   const lines = parseLines(text);
 
   if (lines.length === 0) {
-    await sendMessage(
-      chatId,
-      `⚠️ No detecté tareas válidas. Envía texto con una o más tareas.`,
-    );
+    await sendMessage(chatId, `⚠️ No detecté tareas válidas. Envía texto con una o más tareas.`);
     return;
   }
 
@@ -303,7 +297,7 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
       await sendMessage(chatId, `❌ No se pudo descargar el audio. Intenta de nuevo.`);
       return;
     }
-    
+
     const buffer = Buffer.from(await audioResponse.arrayBuffer());
 
     // 2. Transcribe with Whisper API
@@ -326,8 +320,8 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
       await sendMessage(
         chatId,
         `⚠️ No se detectaron tareas en el audio.\n\n` +
-        `<i>Transcripción: "${transcribedText}"</i>\n\n` +
-        `Intenta con otro audio o envía el texto directamente.`,
+          `<i>Transcripción: "${transcribedText}"</i>\n\n` +
+          `Intenta con otro audio o envía el texto directamente.`,
       );
       return;
     }
@@ -350,21 +344,17 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
     );
 
     // Buttons: Confirm or Correct
-   await sendMessageWithKeyboard(
-      chatId,
-      `Elige una opción:`,
+    await sendMessageWithKeyboard(chatId, `Elige una opción:`, [
       [
-        [
-          { text: "✅ Confirmar tareas", callback_data: "confirm_audio" },
-          { text: "✏️ Enviar correcciones", callback_data: "cancel_audio" },
-        ],
+        { text: "✅ Confirmar tareas", callback_data: "confirm_audio" },
+        { text: "✏️ Enviar correcciones", callback_data: "cancel_audio" },
       ],
-    );
+    ]);
   } catch (err) {
     console.error("[Telegram] Voice processing error:", err);
-    
+
     let errorMessage = `❌ Error al procesar el audio. Intenta de nuevo o envía el texto directamente.`;
-    
+
     if (err instanceof Error) {
       if (err.message.includes("OPENAI_API_KEY")) {
         errorMessage = `⚠️ El servicio de transcripción no está configurado. Contacta al administrador.`;
@@ -372,18 +362,14 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
         errorMessage = `⚠️ El servicio de transcripción ha alcanzado su límite. Intenta más tarde.`;
       }
     }
-    
+
     await sendMessage(chatId, errorMessage);
   }
 }
 
 // ── Photo handler ─────────────────────────────────────────────
 
-async function handlePhotoMessage(
-  chatId: number,
-  fileId: string,
-  _caption: string,
-) {
+async function handlePhotoMessage(chatId: number, fileId: string, _caption: string) {
   const user = await getUserWithWorkspace(chatId);
 
   if (!user) {
@@ -414,10 +400,10 @@ async function handlePhotoMessage(
       await sendMessage(chatId, `❌ No se pudo descargar la imagen. Intenta de nuevo.`);
       return;
     }
-    
+
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     const base64 = buffer.toString("base64");
-    
+
     // Ensure we have a valid image MIME type
     let contentType = imgResponse.headers.get("content-type") ?? "";
     // Validate and normalize MIME type
@@ -468,9 +454,9 @@ async function handlePhotoMessage(
     await showTasksAndAskDestination(chatId, taskLines, "IMAGE");
   } catch (err) {
     console.error("[Telegram] Photo processing error:", err);
-    
+
     let errorMessage = `❌ Error al procesar la imagen. Intenta de nuevo o envía el texto directamente.`;
-    
+
     if (err instanceof Error) {
       if (err.message.includes("OPENAI_API_KEY")) {
         errorMessage = `⚠️ El servic de OCR no está configurado. Contacta al administrador.`;
@@ -478,7 +464,7 @@ async function handlePhotoMessage(
         errorMessage = `⚠️ El servicio de OCR ha alcanzado su límite. Intenta más tarde.`;
       }
     }
-    
+
     await sendMessage(chatId, errorMessage);
   }
 }
@@ -503,21 +489,11 @@ async function showTasksAndAskDestination(
       `¿Dónde quieres guardar estas tareas?`,
   );
 
-  await sendMessageWithKeyboard(
-    chatId,
-    `Elige una opción:`,
-    [
-      [
-        { text: "🧠 Crear nuevo Brain Dump", callback_data: "create_brain" },
-      ],
-      [
-        { text: "📁 Asociar a Brain existente", callback_data: "associate_brain" },
-      ],
-      [
-        { text: "📋 Enviar al Backlog", callback_data: "send_backlog" },
-      ],
-    ],
-  );
+  await sendMessageWithKeyboard(chatId, `Elige una opción:`, [
+    [{ text: "🧠 Crear nuevo Brain Dump", callback_data: "create_brain" }],
+    [{ text: "📁 Asociar a Brain existente", callback_data: "associate_brain" }],
+    [{ text: "📋 Enviar al Backlog", callback_data: "send_backlog" }],
+  ]);
 }
 
 // ── Callback Query Handler ────────────────────────────────────
@@ -562,7 +538,11 @@ async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_q
     await answerCallbackQuery(query.id, "Envía las correcciones como texto");
     clearPendingSession(chatId);
     if (messageId) {
-      await editMessageText(chatId, messageId, `❌ Tareas canceladas. Envía las correcciones como texto normal.`);
+      await editMessageText(
+        chatId,
+        messageId,
+        `❌ Tareas canceladas. Envía las correcciones como texto normal.`,
+      );
     }
     return;
   }
@@ -618,9 +598,12 @@ async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_q
         `🧠 <b>Crear nuevo Brain Dump</b>\n\nEnvía el nombre para el brain dump:`,
       );
     } else {
-      await sendMessage(chatId, `🧠 <b>Crear nuevo Brain Dump</b>\n\nEnvía el nombre para el brain dump:`);
+      await sendMessage(
+        chatId,
+        `🧠 <b>Crear nuevo Brain Dump</b>\n\nEnvía el nombre para el brain dump:`,
+      );
     }
-    
+
     // Mark session as waiting for brain name
     setPendingSession(chatId, session.tasks, session.source);
     return;
@@ -661,11 +644,7 @@ async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_q
       await editMessageText(chatId, messageId, `📁 <b>Selecciona un Brain Dump:</b>`);
     }
 
-    await sendMessageWithKeyboard(
-      chatId,
-      `Elige dónde agregar las tareas:`,
-      buttons,
-    );
+    await sendMessageWithKeyboard(chatId, `Elige dónde agregar las tareas:`, buttons);
     return;
   }
 
@@ -673,7 +652,7 @@ async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_q
   if (data.startsWith("brain_")) {
     await answerCallbackQuery(query.id);
     const brainDumpId = data.substring(6); // Remove "brain_" prefix
-    
+
     if (!session) {
       await sendMessage(chatId, `⚠️ La sesión expiró. Intenta de nuevo.`);
       return;
@@ -722,4 +701,3 @@ async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_q
 
   await answerCallbackQuery(query.id, "Opción no reconocida");
 }
-

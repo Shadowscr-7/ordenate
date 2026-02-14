@@ -1,36 +1,36 @@
 // ============================================================
 // Landing Page — Ordénate
 // ============================================================
-
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+
 import {
-  ArrowRight,
-  Brain,
-  Kanban,
-  Sparkles,
-  Target,
-  Bot,
-  Calendar,
-  Zap,
-  ChevronRight,
-  CheckCircle2,
-  Clock,
-  ListTodo,
-  Trash2,
-  Users,
-  ShieldCheck,
-  MessageSquare,
-  Camera,
-  FileText,
-  Lightbulb,
-  TrendingUp,
-  BarChart3,
-  ArrowDown,
-  Star,
   Infinity,
-  Headphones,
+  ArrowDown,
+  ArrowRight,
+  BarChart3,
+  Bot,
+  Brain,
+  Calendar,
+  Camera,
   Check,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  FileText,
+  Headphones,
+  Kanban,
+  Lightbulb,
+  ListTodo,
+  MessageSquare,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Target,
+  Trash2,
+  TrendingUp,
+  Users,
+  Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -65,8 +65,7 @@ const FEATURES = [
   {
     icon: Target,
     title: "Foco Pareto",
-    description:
-      "Identifica automáticamente el 20% de tareas que genera el 80% de tus resultados.",
+    description: "Identifica automáticamente el 20% de tareas que genera el 80% de tus resultados.",
     gradient: "from-green-400/20 to-emerald-400/20",
     iconColor: "text-green-500",
   },
@@ -230,14 +229,11 @@ const FAQ = [
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col overflow-hidden bg-background">
+    <div className="bg-background flex min-h-screen flex-col overflow-hidden">
       {/* ── Header ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-xl">
+      <header className="bg-background/80 sticky top-0 z-50 border-b backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link
-            href="/"
-            className="flex items-center transition-opacity hover:opacity-80"
-          >
+          <Link href="/" className="flex items-center transition-opacity hover:opacity-80">
             <Image
               src="/images/logo.png"
               alt="Ordénate"
@@ -247,29 +243,17 @@ export default function LandingPage() {
               priority
             />
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
-            <Link
-              href="#como-funciona"
-              className="transition-colors hover:text-foreground"
-            >
+          <nav className="text-muted-foreground hidden items-center gap-6 text-sm font-medium md:flex">
+            <Link href="#como-funciona" className="hover:text-foreground transition-colors">
               Cómo funciona
             </Link>
-            <Link
-              href="#features"
-              className="transition-colors hover:text-foreground"
-            >
+            <Link href="#features" className="hover:text-foreground transition-colors">
               Funcionalidades
             </Link>
-            <Link
-              href="#pricing"
-              className="transition-colors hover:text-foreground"
-            >
+            <Link href="#pricing" className="hover:text-foreground transition-colors">
               Precios
             </Link>
-            <Link
-              href="#faq"
-              className="transition-colors hover:text-foreground"
-            >
+            <Link href="#faq" className="hover:text-foreground transition-colors">
               FAQ
             </Link>
           </nav>
@@ -279,7 +263,7 @@ export default function LandingPage() {
             </Button>
             <Button
               asChild
-              className="group bg-gradient-to-r from-primary to-cyan-500 text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+              className="group from-primary shadow-primary/25 hover:shadow-primary/30 bg-gradient-to-r to-cyan-500 text-white shadow-lg transition-all hover:shadow-xl"
             >
               <Link href="/signup">
                 Comenzar gratis
@@ -294,14 +278,14 @@ export default function LandingPage() {
       <section className="relative flex flex-col items-center justify-center px-4 py-20 text-center lg:py-28">
         {/* Background decorations */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -left-40 top-20 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+          <div className="bg-primary/5 absolute top-20 -left-40 h-80 w-80 rounded-full blur-3xl" />
           <div className="absolute -right-40 bottom-20 h-96 w-96 rounded-full bg-cyan-400/5 blur-3xl" />
-          <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-3xl" />
+          <div className="absolute top-1/4 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-400/5 blur-3xl" />
         </div>
 
         <div className="relative z-10">
           {/* Badge */}
-          <div className="animate-fade-in-down mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary backdrop-blur-sm">
+          <div className="animate-fade-in-down border-primary/20 bg-primary/5 text-primary mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
             <Sparkles className="h-3.5 w-3.5 animate-pulse" />
             Potenciado por IA
           </div>
@@ -321,17 +305,17 @@ export default function LandingPage() {
           {/* Heading */}
           <h1 className="animate-fade-in-up max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-7xl">
             De ideas caóticas a{" "}
-            <span className="animate-gradient bg-gradient-to-r from-primary via-cyan-500 to-primary bg-[length:200%_auto] bg-clip-text text-transparent">
+            <span className="animate-gradient from-primary to-primary bg-gradient-to-r via-cyan-500 bg-[length:200%_auto] bg-clip-text text-transparent">
               acción enfocada
             </span>
           </h1>
 
-          <p className="animate-fade-in-up stagger-2 mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            Captura todo lo que tienes en la cabeza. La IA lo organiza. Tú
-            priorizas con Eisenhower y Pareto. Ejecuta solo lo que importa.
+          <p className="animate-fade-in-up stagger-2 text-muted-foreground mx-auto mt-6 max-w-2xl text-lg sm:text-xl">
+            Captura todo lo que tienes en la cabeza. La IA lo organiza. Tú priorizas con Eisenhower
+            y Pareto. Ejecuta solo lo que importa.
           </p>
 
-          <p className="animate-fade-in-up stagger-3 mt-2 text-sm font-medium text-primary/80">
+          <p className="animate-fade-in-up stagger-3 text-primary/80 mt-2 text-sm font-medium">
             Tu mente, en orden.
           </p>
 
@@ -340,7 +324,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               asChild
-              className="group h-12 bg-gradient-to-r from-primary to-cyan-500 px-8 text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+              className="group from-primary shadow-primary/25 hover:shadow-primary/30 h-12 bg-gradient-to-r to-cyan-500 px-8 text-white shadow-lg transition-all hover:shadow-xl"
             >
               <Link href="/signup">
                 Empezar gratis
@@ -367,24 +351,24 @@ export default function LandingPage() {
               ].map((gradient, i) => (
                 <div
                   key={i}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full ${gradient} text-xs font-bold text-white ring-2 ring-background`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full ${gradient} ring-background text-xs font-bold text-white ring-2`}
                 >
                   {String.fromCharCode(65 + i)}
                 </div>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">+500</span>{" "}
-              personas ya organizan su mente con Ordénate
+            <p className="text-muted-foreground text-sm">
+              <span className="text-foreground font-semibold">+500</span> personas ya organizan su
+              mente con Ordénate
             </p>
           </div>
         </div>
       </section>
 
       {/* ── Core Flow Visual ───────────────────────────────── */}
-      <section className="border-y bg-muted/20 py-16">
+      <section className="bg-muted/20 border-y py-16">
         <div className="mx-auto max-w-5xl px-4">
-          <p className="mb-10 text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          <p className="text-muted-foreground mb-10 text-center text-sm font-semibold tracking-widest uppercase">
             El flujo completo
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -422,12 +406,10 @@ export default function LandingPage() {
                   >
                     <item.icon className="h-7 w-7 text-white sm:h-8 sm:w-8" />
                   </div>
-                  <span className="text-[11px] font-semibold sm:text-xs">
-                    {item.label}
-                  </span>
+                  <span className="text-[11px] font-semibold sm:text-xs">{item.label}</span>
                 </div>
                 {idx < arr.length - 1 && (
-                  <ArrowRight className="h-5 w-5 text-muted-foreground/40" />
+                  <ArrowRight className="text-muted-foreground/40 h-5 w-5" />
                 )}
               </div>
             ))}
@@ -439,18 +421,18 @@ export default function LandingPage() {
       <section id="como-funciona" className="py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-20 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <Lightbulb className="h-3.5 w-3.5" />
               Paso a paso
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               ¿Cómo funciona{" "}
-              <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+              <span className="from-primary bg-gradient-to-r to-cyan-500 bg-clip-text text-transparent">
                 Ordénate
               </span>
               ?
             </h2>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
               En 4 pasos simples, pasas del caos mental a la acción enfocada.
             </p>
           </div>
@@ -470,10 +452,8 @@ export default function LandingPage() {
                   >
                     Paso {step.step}
                   </div>
-                  <h3 className="text-2xl font-bold sm:text-3xl">
-                    {step.title}
-                  </h3>
-                  <p className="max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+                  <h3 className="text-2xl font-bold sm:text-3xl">{step.title}</h3>
+                  <p className="text-muted-foreground max-w-lg text-base leading-relaxed sm:text-lg">
                     {step.description}
                   </p>
 
@@ -483,9 +463,9 @@ export default function LandingPage() {
                       {step.inputTypes.map((input) => (
                         <div
                           key={input.label}
-                          className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium"
+                          className="bg-card flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium"
                         >
-                          <input.icon className="h-4 w-4 text-primary" />
+                          <input.icon className="text-primary h-4 w-4" />
                           {input.label}
                         </div>
                       ))}
@@ -512,24 +492,24 @@ export default function LandingPage() {
                   {/* Step 1 — Brain dump visual */}
                   {step.step === 1 && (
                     <div className="relative mx-auto max-w-sm">
-                      <div className="rounded-2xl border bg-card p-5 shadow-xl">
+                      <div className="bg-card rounded-2xl border p-5 shadow-xl">
                         <div className="mb-3 flex items-center gap-2">
                           <div className="h-3 w-3 rounded-full bg-red-400" />
                           <div className="h-3 w-3 rounded-full bg-amber-400" />
                           <div className="h-3 w-3 rounded-full bg-green-400" />
                         </div>
-                        <div className="space-y-2 font-mono text-sm text-muted-foreground">
+                        <div className="text-muted-foreground space-y-2 font-mono text-sm">
                           <p>Llamar al dentista</p>
                           <p>Entregar propuesta del cliente X</p>
                           <p>Comprar regalo para mamá</p>
                           <p>Revisar métricas de ventas</p>
                           <p>Hacer ejercicio 3 veces/semana</p>
                           <p>Responder emails pendientes</p>
-                          <p className="animate-pulse text-primary">|</p>
+                          <p className="text-primary animate-pulse">|</p>
                         </div>
                       </div>
                       {/* Floating camera badge */}
-                      <div className="absolute -right-3 -top-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-cyan-500 shadow-lg">
+                      <div className="from-primary absolute -top-3 -right-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br to-cyan-500 shadow-lg">
                         <Camera className="h-6 w-6 text-white" />
                       </div>
                     </div>
@@ -538,7 +518,7 @@ export default function LandingPage() {
                   {/* Step 2 — AI processing visual */}
                   {step.step === 2 && (
                     <div className="relative mx-auto max-w-sm">
-                      <div className="rounded-2xl border bg-card p-5 shadow-xl">
+                      <div className="bg-card rounded-2xl border p-5 shadow-xl">
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
                           <Sparkles className="h-4 w-4 text-amber-500" />
                           IA procesando...
@@ -578,7 +558,7 @@ export default function LandingPage() {
                           ].map((item, i) => (
                             <div
                               key={i}
-                              className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm"
+                              className="bg-muted/30 flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
                             >
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -594,7 +574,7 @@ export default function LandingPage() {
                         </div>
                       </div>
                       {/* Sparkle decoration */}
-                      <div className="absolute -left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
+                      <div className="absolute top-1/2 -left-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
                         <Zap className="h-5 w-5 text-white" />
                       </div>
                     </div>
@@ -603,7 +583,7 @@ export default function LandingPage() {
                   {/* Step 3 — Eisenhower Matrix visual */}
                   {step.step === 3 && (
                     <div className="mx-auto max-w-sm">
-                      <div className="grid grid-cols-2 gap-2 rounded-2xl border bg-card p-4 shadow-xl">
+                      <div className="bg-card grid grid-cols-2 gap-2 rounded-2xl border p-4 shadow-xl">
                         {step.quadrants!.map((q) => (
                           <div
                             key={q.label}
@@ -622,7 +602,7 @@ export default function LandingPage() {
                           </div>
                         ))}
                         {/* Labels */}
-                        <div className="col-span-2 mt-2 flex justify-between px-2 text-[10px] font-semibold uppercase text-muted-foreground">
+                        <div className="text-muted-foreground col-span-2 mt-2 flex justify-between px-2 text-[10px] font-semibold uppercase">
                           <span>← Menos urgente</span>
                           <span>Más urgente →</span>
                         </div>
@@ -633,7 +613,7 @@ export default function LandingPage() {
                   {/* Step 4 — Pareto visual */}
                   {step.step === 4 && (
                     <div className="mx-auto max-w-sm">
-                      <div className="rounded-2xl border bg-card p-5 shadow-xl">
+                      <div className="bg-card rounded-2xl border p-5 shadow-xl">
                         <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
                           <Target className="h-4 w-4 text-green-500" />
                           Foco Pareto
@@ -642,25 +622,19 @@ export default function LandingPage() {
                           {/* 20% column */}
                           <div className="flex-1">
                             <div className="mb-2 text-center">
-                              <span className="text-2xl font-black text-green-500">
-                                20%
-                              </span>
-                              <p className="text-[10px] text-muted-foreground">
-                                de tus tareas
-                              </p>
+                              <span className="text-2xl font-black text-green-500">20%</span>
+                              <p className="text-muted-foreground text-[10px]">de tus tareas</p>
                             </div>
                             <div className="space-y-1.5">
-                              {["Propuesta cliente", "Métricas ventas"].map(
-                                (t) => (
-                                  <div
-                                    key={t}
-                                    className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-500"
-                                  >
-                                    <Star className="h-3 w-3" />
-                                    {t}
-                                  </div>
-                                ),
-                              )}
+                              {["Propuesta cliente", "Métricas ventas"].map((t) => (
+                                <div
+                                  key={t}
+                                  className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-2 py-1.5 text-xs font-medium text-green-500"
+                                >
+                                  <Star className="h-3 w-3" />
+                                  {t}
+                                </div>
+                              ))}
                             </div>
                           </div>
                           {/* Arrow */}
@@ -670,15 +644,11 @@ export default function LandingPage() {
                           {/* 80% column */}
                           <div className="flex-1">
                             <div className="mb-2 text-center">
-                              <span className="text-2xl font-black text-primary">
-                                80%
-                              </span>
-                              <p className="text-[10px] text-muted-foreground">
-                                de resultados
-                              </p>
+                              <span className="text-primary text-2xl font-black">80%</span>
+                              <p className="text-muted-foreground text-[10px]">de resultados</p>
                             </div>
-                            <div className="flex items-center justify-center rounded-xl bg-primary/10 p-4">
-                              <TrendingUp className="h-10 w-10 text-primary" />
+                            <div className="bg-primary/10 flex items-center justify-center rounded-xl p-4">
+                              <TrendingUp className="text-primary h-10 w-10" />
                             </div>
                           </div>
                         </div>
@@ -693,22 +663,21 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features Grid ──────────────────────────────────── */}
-      <section id="features" className="border-t bg-muted/20 py-24">
+      <section id="features" className="bg-muted/20 border-t py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-16 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <BarChart3 className="h-3.5 w-3.5" />
               Funcionalidades
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
               Todo lo que necesitas para{" "}
-              <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+              <span className="from-primary bg-gradient-to-r to-cyan-500 bg-clip-text text-transparent">
                 priorizar con inteligencia
               </span>
             </h2>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Un flujo completo desde el caos mental hasta la ejecución
-              enfocada.
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+              Un flujo completo desde el caos mental hasta la ejecución enfocada.
             </p>
           </div>
 
@@ -716,7 +685,7 @@ export default function LandingPage() {
             {FEATURES.map((feature, idx) => (
               <div
                 key={feature.title}
-                className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/5"
+                className="group bg-card hover:shadow-primary/5 relative overflow-hidden rounded-2xl border p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
@@ -728,14 +697,10 @@ export default function LandingPage() {
                   <div
                     className={`mb-4 inline-flex rounded-xl bg-gradient-to-br ${feature.gradient} p-3 transition-transform duration-300 group-hover:scale-110`}
                   >
-                    <feature.icon
-                      className={`h-6 w-6 ${feature.iconColor}`}
-                    />
+                    <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
+                  <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -749,19 +714,18 @@ export default function LandingPage() {
       <section className="py-24">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-16 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <Zap className="h-3.5 w-3.5" />
               Integraciones
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
               Conectado con tus{" "}
-              <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+              <span className="from-primary bg-gradient-to-r to-cyan-500 bg-clip-text text-transparent">
                 herramientas favoritas
               </span>
             </h2>
-            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-              Captura ideas desde donde estés. Ordénate se integra con las
-              herramientas que ya usas.
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+              Captura ideas desde donde estés. Ordénate se integra con las herramientas que ya usas.
             </p>
           </div>
 
@@ -769,18 +733,14 @@ export default function LandingPage() {
             {INTEGRATIONS.map((item) => (
               <div
                 key={item.label}
-                className="group rounded-2xl border bg-card p-6 text-center transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5"
+                className="group bg-card hover:shadow-primary/5 rounded-2xl border p-6 text-center transition-all hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-cyan-400/10 transition-transform group-hover:scale-110">
-                  <item.icon className="h-7 w-7 text-primary" />
+                <div className="from-primary/10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br to-cyan-400/10 transition-transform group-hover:scale-110">
+                  <item.icon className="text-primary h-7 w-7" />
                 </div>
                 <h3 className="font-semibold">{item.label}</h3>
-                <p className="mb-2 text-xs font-medium text-primary">
-                  {item.sublabel}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {item.description}
-                </p>
+                <p className="text-primary mb-2 text-xs font-medium">{item.sublabel}</p>
+                <p className="text-muted-foreground text-sm">{item.description}</p>
               </div>
             ))}
           </div>
@@ -788,20 +748,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ────────────────────────────────────────── */}
-      <section id="pricing" className="border-t bg-muted/20 py-24">
+      <section id="pricing" className="bg-muted/20 border-t py-24">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-16 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <ShieldCheck className="h-3.5 w-3.5" />
               Planes
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
               Un plan para cada nivel de{" "}
-              <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+              <span className="from-primary bg-gradient-to-r to-cyan-500 bg-clip-text text-transparent">
                 productividad
               </span>
             </h2>
-            <p className="mx-auto max-w-xl text-lg text-muted-foreground">
+            <p className="text-muted-foreground mx-auto max-w-xl text-lg">
               Empieza gratis. Escala cuando estés listo.
             </p>
           </div>
@@ -810,21 +770,17 @@ export default function LandingPage() {
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative overflow-hidden rounded-2xl border bg-card p-8 transition-all hover:shadow-xl ${
-                  plan.popular
-                    ? "border-primary/50 shadow-lg shadow-primary/10"
-                    : ""
+                className={`bg-card relative overflow-hidden rounded-2xl border p-8 transition-all hover:shadow-xl ${
+                  plan.popular ? "border-primary/50 shadow-primary/10 shadow-lg" : ""
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute right-0 top-0 rounded-bl-xl bg-gradient-to-r from-primary to-cyan-500 px-4 py-1.5 text-xs font-bold text-white">
+                  <div className="from-primary absolute top-0 right-0 rounded-bl-xl bg-gradient-to-r to-cyan-500 px-4 py-1.5 text-xs font-bold text-white">
                     Popular
                   </div>
                 )}
                 <h3 className="text-xl font-bold">{plan.name}</h3>
-                <p className="mb-4 text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
+                <p className="text-muted-foreground mb-4 text-sm">{plan.description}</p>
                 <div className="mb-6 flex items-baseline gap-1">
                   <span className="text-4xl font-black">{plan.price}</span>
                   <span className="text-muted-foreground">{plan.period}</span>
@@ -833,7 +789,7 @@ export default function LandingPage() {
                   asChild
                   className={`mb-8 w-full ${
                     plan.popular
-                      ? "bg-gradient-to-r from-primary to-cyan-500 text-white shadow-lg shadow-primary/25"
+                      ? "from-primary shadow-primary/25 bg-gradient-to-r to-cyan-500 text-white shadow-lg"
                       : ""
                   }`}
                   variant={plan.popular ? "default" : "outline"}
@@ -849,13 +805,11 @@ export default function LandingPage() {
                       {f.included ? (
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                       ) : (
-                        <div className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/20" />
+                        <div className="border-muted-foreground/20 mt-0.5 h-4 w-4 shrink-0 rounded-full border-2" />
                       )}
                       <span
                         className={`text-sm ${
-                          f.included
-                            ? "text-foreground"
-                            : "text-muted-foreground/50 line-through"
+                          f.included ? "text-foreground" : "text-muted-foreground/50 line-through"
                         }`}
                       >
                         {f.text}
@@ -873,7 +827,7 @@ export default function LandingPage() {
       <section id="faq" className="py-24">
         <div className="mx-auto max-w-3xl px-4">
           <div className="mb-16 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <MessageSquare className="h-3.5 w-3.5" />
               FAQ
             </div>
@@ -886,13 +840,13 @@ export default function LandingPage() {
             {FAQ.map((item, idx) => (
               <details
                 key={idx}
-                className="group rounded-xl border bg-card transition-all open:shadow-lg open:shadow-primary/5"
+                className="group bg-card open:shadow-primary/5 rounded-xl border transition-all open:shadow-lg"
               >
-                <summary className="flex cursor-pointer items-center justify-between p-5 text-left font-semibold transition-colors hover:text-primary [&::-webkit-details-marker]:hidden">
+                <summary className="hover:text-primary flex cursor-pointer items-center justify-between p-5 text-left font-semibold transition-colors [&::-webkit-details-marker]:hidden">
                   <span className="pr-4">{item.q}</span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
+                  <ChevronRight className="text-muted-foreground h-5 w-5 shrink-0 transition-transform group-open:rotate-90" />
                 </summary>
-                <div className="border-t px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+                <div className="text-muted-foreground border-t px-5 py-4 text-sm leading-relaxed">
                   {item.a}
                 </div>
               </details>
@@ -904,8 +858,8 @@ export default function LandingPage() {
       {/* ── CTA Final ──────────────────────────────────────── */}
       <section className="relative overflow-hidden border-t py-28">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/4 top-0 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="bg-primary/10 absolute top-0 left-1/4 h-64 w-64 rounded-full blur-3xl" />
+          <div className="absolute right-1/4 bottom-0 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
         </div>
         <div className="relative z-10 mx-auto max-w-2xl px-4 text-center">
           <Image
@@ -917,23 +871,21 @@ export default function LandingPage() {
           />
           <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
             ¿Listo para ordenar{" "}
-            <span className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+            <span className="from-primary bg-gradient-to-r to-cyan-500 bg-clip-text text-transparent">
               tu mente
             </span>
             ?
           </h2>
-          <p className="mb-8 text-lg text-muted-foreground">
+          <p className="text-muted-foreground mb-8 text-lg">
             Deja de saltar entre ideas. Empieza a ejecutar lo que importa.
             <br />
-            <span className="font-semibold text-foreground">
-              Tu mente, en orden.
-            </span>
+            <span className="text-foreground font-semibold">Tu mente, en orden.</span>
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Button
               size="lg"
               asChild
-              className="group h-14 bg-gradient-to-r from-primary to-cyan-500 px-10 text-lg text-white shadow-xl shadow-primary/25 transition-all hover:shadow-2xl hover:shadow-primary/30"
+              className="group from-primary shadow-primary/25 hover:shadow-primary/30 h-14 bg-gradient-to-r to-cyan-500 px-10 text-lg text-white shadow-xl transition-all hover:shadow-2xl"
             >
               <Link href="/signup">
                 Crear cuenta gratis
@@ -941,7 +893,7 @@ export default function LandingPage() {
               </Link>
             </Button>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-4 text-sm">
             Sin tarjeta de crédito • Empezar toma 30 segundos
           </p>
         </div>
@@ -960,36 +912,24 @@ export default function LandingPage() {
                 className="h-8 w-auto object-contain"
               />
             </div>
-            <nav className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-              <Link
-                href="#como-funciona"
-                className="transition-colors hover:text-foreground"
-              >
+            <nav className="text-muted-foreground flex flex-wrap items-center gap-6 text-sm">
+              <Link href="#como-funciona" className="hover:text-foreground transition-colors">
                 Cómo funciona
               </Link>
-              <Link
-                href="#features"
-                className="transition-colors hover:text-foreground"
-              >
+              <Link href="#features" className="hover:text-foreground transition-colors">
                 Funcionalidades
               </Link>
-              <Link
-                href="#pricing"
-                className="transition-colors hover:text-foreground"
-              >
+              <Link href="#pricing" className="hover:text-foreground transition-colors">
                 Precios
               </Link>
-              <Link
-                href="#faq"
-                className="transition-colors hover:text-foreground"
-              >
+              <Link href="#faq" className="hover:text-foreground transition-colors">
                 FAQ
               </Link>
             </nav>
           </div>
-          <div className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Ordénate. Tu mente, en orden. Todos
-            los derechos reservados.
+          <div className="text-muted-foreground mt-8 border-t pt-6 text-center text-xs">
+            © {new Date().getFullYear()} Ordénate. Tu mente, en orden. Todos los derechos
+            reservados.
           </div>
         </div>
       </footer>

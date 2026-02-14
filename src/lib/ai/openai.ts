@@ -1,8 +1,8 @@
 // ============================================================
 // OpenAI Client — Singleton
 // ============================================================
-
 import OpenAI from "openai";
+
 import { serverEnv } from "@/lib/env";
 
 let _client: OpenAI | null = null;

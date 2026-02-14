@@ -7,8 +7,11 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+
 import Link from "next/link";
+
+import { type EisenhowerQuadrant, QUADRANT_META } from "@/types";
 import {
   Calendar,
   Check,
@@ -23,18 +26,13 @@ import {
   Zap,
 } from "lucide-react";
 
+import { ROUTES } from "@/lib/constants";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ROUTES } from "@/lib/constants";
-import { QUADRANT_META, type EisenhowerQuadrant } from "@/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -82,9 +80,7 @@ export default function ParetoPage() {
 
   function togglePareto(task: TaskItem) {
     const newVal = !task.isPareto;
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, isPareto: newVal } : t)),
-    );
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, isPareto: newVal } : t)));
     startTransition(async () => {
       await fetch(`/api/tasks/${task.id}`, {
         method: "PATCH",
@@ -96,9 +92,7 @@ export default function ParetoPage() {
 
   function toggleDone(task: TaskItem) {
     const newStatus = task.status === "DONE" ? "PENDING" : "DONE";
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
-    );
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
     startTransition(async () => {
       await fetch(`/api/tasks/${task.id}`, {
         method: "PATCH",
@@ -109,9 +103,7 @@ export default function ParetoPage() {
   }
 
   function setDueDate(taskId: string, date: string | null) {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, dueDate: date } : t)),
-    );
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, dueDate: date } : t)));
     startTransition(async () => {
       await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
@@ -122,9 +114,7 @@ export default function ParetoPage() {
   }
 
   async function analyzeWithAI() {
-    const pendingTasks = tasks.filter(
-      (t) => t.status !== "DONE" && t.status !== "HIDDEN",
-    );
+    const pendingTasks = tasks.filter((t) => t.status !== "DONE" && t.status !== "HIDDEN");
     if (pendingTasks.length === 0) return;
 
     setIsAnalyzing(true);
@@ -145,9 +135,7 @@ export default function ParetoPage() {
       // Apply suggestions
       for (const suggestion of data.suggestions) {
         const task = pendingTasks.find(
-          (t) =>
-            t.text.toLowerCase().trim() ===
-            suggestion.taskText.toLowerCase().trim(),
+          (t) => t.text.toLowerCase().trim() === suggestion.taskText.toLowerCase().trim(),
         );
         if (task && suggestion.isPareto !== task.isPareto) {
           await fetch(`/api/tasks/${task.id}`, {
@@ -172,9 +160,7 @@ export default function ParetoPage() {
   const pendingPareto = paretoTasks.filter((t) => t.status === "PENDING");
   const donePareto = paretoTasks.filter((t) => t.status === "DONE");
 
-  const displayPareto = hideDone
-    ? paretoTasks.filter((t) => t.status !== "DONE")
-    : paretoTasks;
+  const displayPareto = hideDone ? paretoTasks.filter((t) => t.status !== "DONE") : paretoTasks;
 
   const displayOther = hideDone
     ? nonParetoTasks.filter((t) => t.status !== "DONE")
@@ -185,7 +171,7 @@ export default function ParetoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -200,7 +186,7 @@ export default function ParetoPage() {
               <Target className="mr-2 inline-block h-6 w-6 text-amber-500" />
               Foco Pareto
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               El 20% de tareas que genera el 80% del impacto. Enfócate aquí.
             </p>
           </div>
@@ -222,9 +208,7 @@ export default function ParetoPage() {
                   {isAnalyzing ? "Analizando…" : "Analizar con IA"}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                La IA identificará las tareas más impactantes
-              </TooltipContent>
+              <TooltipContent>La IA identificará las tareas más impactantes</TooltipContent>
             </Tooltip>
             <Button
               variant={hideDone ? "default" : "outline"}
@@ -232,11 +216,7 @@ export default function ParetoPage() {
               className="h-7 gap-1.5 text-xs"
               onClick={() => setHideDone(!hideDone)}
             >
-              {hideDone ? (
-                <EyeOff className="h-3 w-3" />
-              ) : (
-                <Eye className="h-3 w-3" />
-              )}
+              {hideDone ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
               Completadas
             </Button>
           </div>
@@ -246,29 +226,22 @@ export default function ParetoPage() {
         <div className="grid grid-cols-3 gap-3">
           <Card>
             <CardContent className="py-2.5 text-center">
-              <p className="text-lg font-bold text-amber-500">
-                {pendingPareto.length}
-              </p>
-              <p className="text-[11px] text-muted-foreground">Pareto activas</p>
+              <p className="text-lg font-bold text-amber-500">{pendingPareto.length}</p>
+              <p className="text-muted-foreground text-[11px]">Pareto activas</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-2.5 text-center">
-              <p className="text-lg font-bold text-green-500">
-                {donePareto.length}
-              </p>
-              <p className="text-[11px] text-muted-foreground">Completadas</p>
+              <p className="text-lg font-bold text-green-500">{donePareto.length}</p>
+              <p className="text-muted-foreground text-[11px]">Completadas</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="py-2.5 text-center">
               <p className="text-lg font-bold">
-                {tasks.length > 0
-                  ? Math.round((paretoTasks.length / tasks.length) * 100)
-                  : 0}
-                %
+                {tasks.length > 0 ? Math.round((paretoTasks.length / tasks.length) * 100) : 0}%
               </p>
-              <p className="text-[11px] text-muted-foreground">Del total</p>
+              <p className="text-muted-foreground text-[11px]">Del total</p>
             </CardContent>
           </Card>
         </div>
@@ -278,10 +251,7 @@ export default function ParetoPage() {
           <div className="mb-2 flex items-center gap-2">
             <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
             <h2 className="text-sm font-semibold">Las pocas vitales</h2>
-            <Badge
-              variant="secondary"
-              className="text-[10px] px-1.5 py-0 tabular-nums"
-            >
+            <Badge variant="secondary" className="px-1.5 py-0 text-[10px] tabular-nums">
               {displayPareto.length}
             </Badge>
           </div>
@@ -289,20 +259,20 @@ export default function ParetoPage() {
           {displayPareto.length === 0 ? (
             <Card className="border-dashed border-amber-500/20">
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                <Target className="mb-2 h-8 w-8 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">
+                <Target className="text-muted-foreground/30 mb-2 h-8 w-8" />
+                <p className="text-muted-foreground text-sm">
                   {paretoTasks.length > 0
                     ? "Todas las tareas Pareto están completadas."
                     : "No hay tareas Pareto marcadas aún."}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground/60">
+                <p className="text-muted-foreground/60 mt-1 text-xs">
                   Usa el botón &quot;Analizar con IA&quot; o marca tareas manualmente con la ⭐
                 </p>
               </CardContent>
             </Card>
           ) : (
             <Card className="border-amber-500/20 bg-amber-500/[0.02]">
-              <CardContent className="divide-y divide-border py-1">
+              <CardContent className="divide-border divide-y py-1">
                 {displayPareto.map((task) => (
                   <TaskRow
                     key={task.id}
@@ -323,25 +293,18 @@ export default function ParetoPage() {
         <div>
           <button
             onClick={() => setShowAll(!showAll)}
-            className="mb-2 flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1.5 text-sm font-medium transition-colors"
           >
-            {showAll ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            {showAll ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             Otras tareas
-            <Badge
-              variant="secondary"
-              className="ml-1 text-[10px] px-1.5 py-0 tabular-nums"
-            >
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px] tabular-nums">
               {displayOther.length}
             </Badge>
           </button>
 
           {showAll && displayOther.length > 0 && (
             <Card>
-              <CardContent className="divide-y divide-border py-1">
+              <CardContent className="divide-border divide-y py-1">
                 {displayOther.map((task) => (
                   <TaskRow
                     key={task.id}
@@ -361,14 +324,14 @@ export default function ParetoPage() {
         {tasks.length === 0 && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Target className="mb-3 h-10 w-10 text-muted-foreground/40" />
+              <Target className="text-muted-foreground/40 mb-3 h-10 w-10" />
               <h3 className="mb-1 text-base font-semibold">Sin tareas</h3>
-              <p className="mb-4 max-w-sm text-sm text-muted-foreground">
+              <p className="text-muted-foreground mb-4 max-w-sm text-sm">
                 Crea un brain dump primero para tener tareas que analizar.
               </p>
               <Button
                 asChild
-                className="bg-gradient-to-r from-primary to-cyan-500 text-white shadow-md shadow-primary/20"
+                className="from-primary shadow-primary/20 bg-gradient-to-r to-cyan-500 text-white shadow-md"
               >
                 <Link href={ROUTES.NEW_DUMP}>Crear brain dump</Link>
               </Button>
@@ -400,8 +363,7 @@ function TaskRow({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const quadrant = task.quadrant ? QUADRANT_META[task.quadrant] : null;
 
-  const isOverdue =
-    task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "DONE";
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "DONE";
 
   return (
     <div
@@ -443,29 +405,25 @@ function TaskRow({
         <div className="flex items-center gap-2">
           <p
             className={`text-[13px] leading-snug ${
-              task.status === "DONE"
-                ? "text-muted-foreground line-through"
-                : ""
+              task.status === "DONE" ? "text-muted-foreground line-through" : ""
             }`}
           >
             {task.text}
           </p>
           {quadrant && (
-            <span className={`shrink-0 text-[10px] ${quadrant.color}`}>
-              {quadrant.icon}
-            </span>
+            <span className={`shrink-0 text-[10px] ${quadrant.color}`}>{quadrant.icon}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="mt-0.5 flex items-center gap-2">
           {task.brainDump.title && (
-            <span className="truncate text-[11px] text-muted-foreground/50">
+            <span className="text-muted-foreground/50 truncate text-[11px]">
               {task.brainDump.title}
             </span>
           )}
           {task.dueDate && (
             <span
               className={`flex items-center gap-1 text-[11px] ${
-                isOverdue ? "text-red-500 font-medium" : "text-muted-foreground/60"
+                isOverdue ? "font-medium text-red-500" : "text-muted-foreground/60"
               }`}
             >
               <Calendar className="h-2.5 w-2.5" />
@@ -485,11 +443,7 @@ function TaskRow({
             <Input
               type="date"
               className="h-7 w-32 text-xs"
-              defaultValue={
-                task.dueDate
-                  ? new Date(task.dueDate).toISOString().split("T")[0]
-                  : ""
-              }
+              defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""}
               onChange={(e) => {
                 onSetDueDate(task.id, e.target.value || null);
                 setShowDatePicker(false);
@@ -503,7 +457,7 @@ function TaskRow({
             <TooltipTrigger asChild>
               <button
                 onClick={() => setShowDatePicker(true)}
-                className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1"
               >
                 <Calendar className="h-3.5 w-3.5" />
               </button>

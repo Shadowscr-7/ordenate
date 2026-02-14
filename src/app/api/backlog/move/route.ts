@@ -4,19 +4,20 @@
 // POST /api/backlog/move
 // Body: { taskIds: string[], brainDumpId: string }
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
+import { z } from "zod";
+
 import {
-  apiSuccess,
   apiError,
+  apiServerError,
+  apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
 import { apiLimiter, getClientIp } from "@/lib/rate-limit";
-import { z } from "zod";
 
 const moveTasksSchema = z.object({
   taskIds: z.array(z.string()).min(1, "Debes seleccionar al menos una tarea"),
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     let nextSortOrder = maxSortOrder + 1;
 
     // Create tasks in brain dump
-    const tasksToCreate = backlogTasks.map((backlogTask: any) => ({
+    const tasksToCreate = backlogTasks.map((backlogTask) => ({
       text: backlogTask.text,
       sortOrder: nextSortOrder++,
       quadrant: backlogTask.quadrant,

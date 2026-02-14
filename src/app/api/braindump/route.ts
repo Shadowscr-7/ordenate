@@ -7,21 +7,21 @@
 //     1. Manual — split rawText by lines (default)
 //     2. AI     — normalize with LLM + classify Eisenhower
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
-import { createBrainDumpSchema } from "@/lib/validations";
+
+import { classifyTasks, normalizeText } from "@/lib/ai";
 import {
-  apiSuccess,
   apiError,
+  apiServerError,
+  apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
-import { normalizeText, classifyTasks } from "@/lib/ai";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
 import { canCreateDump } from "@/lib/plan-gate";
 import { apiLimiter, getClientIp } from "@/lib/rate-limit";
+import { createBrainDumpSchema } from "@/lib/validations";
 
 // ─── GET: List brain dumps ───────────────────────────────────
 
@@ -107,7 +107,12 @@ export async function POST(request: NextRequest) {
 
     let taskLines: string[];
     let suggestedTitle = title || null;
-    let aiClassifications: { text: string; quadrant: string; confidence: number; reason: string }[] = [];
+    let aiClassifications: {
+      text: string;
+      quadrant: string;
+      confidence: number;
+      reason: string;
+    }[] = [];
 
     if (useAI) {
       // ── AI Pipeline ──────────────────────────────────────

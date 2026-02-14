@@ -1,21 +1,13 @@
 // ============================================================
 // Add Task to Brain Dump — POST /api/braindump/[id]/tasks
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiNotFound,
-  apiServerError,
-} from "@/lib/api-response";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+import { apiNotFound, apiServerError, apiSuccess, apiUnauthorized } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
+
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
@@ -41,10 +33,10 @@ export async function POST(
     const body = await request.json();
     const text = body.text?.trim();
     if (!text) {
-      return new Response(
-        JSON.stringify({ error: "El texto es requerido" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "El texto es requerido" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const maxOrder = brainDump.tasks[0]?.sortOrder ?? -1;

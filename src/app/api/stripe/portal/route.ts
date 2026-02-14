@@ -2,17 +2,12 @@
 // Stripe Customer Portal — Create portal session
 // POST /api/stripe/portal
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { getStripe } from "@/lib/stripe";
-import { db } from "@/lib/db";
+
+import { apiError, apiServerError, apiSuccess, apiUnauthorized } from "@/lib/api-response";
 import { getSession } from "@/lib/auth/actions";
-import {
-  apiSuccess,
-  apiError,
-  apiUnauthorized,
-  apiServerError,
-} from "@/lib/api-response";
+import { db } from "@/lib/db";
+import { getStripe } from "@/lib/stripe";
 
 export async function POST(_request: NextRequest) {
   try {

@@ -12,16 +12,23 @@ interface PendingSession {
 const pendingSessions = new Map<string, PendingSession>();
 
 // Auto-cleanup old sessions (older than 1 hour)
-setInterval(() => {
-  const oneHourAgo = Date.now() - 60 * 60 * 1000;
-  for (const [key, session] of pendingSessions.entries()) {
-    if (session.timestamp < oneHourAgo) {
-      pendingSessions.delete(key);
+setInterval(
+  () => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    for (const [key, session] of pendingSessions.entries()) {
+      if (session.timestamp < oneHourAgo) {
+        pendingSessions.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000); // Every 5 minutes
+  },
+  5 * 60 * 1000,
+); // Every 5 minutes
 
-export function setPendingSession(chatId: number, tasks: string[], source: "TEXT" | "IMAGE" | "VOICE"): void {
+export function setPendingSession(
+  chatId: number,
+  tasks: string[],
+  source: "TEXT" | "IMAGE" | "VOICE",
+): void {
   pendingSessions.set(String(chatId), {
     tasks,
     timestamp: Date.now(),

@@ -5,22 +5,19 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+
 import Image from "next/image";
+import Link from "next/link";
+
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 import { signIn } from "@/lib/auth/actions";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +37,7 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center px-4">
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 top-1/4 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="bg-primary/5 absolute top-1/4 -left-40 h-80 w-80 rounded-full blur-3xl" />
         <div className="absolute -right-40 bottom-1/4 h-80 w-80 rounded-full bg-cyan-400/5 blur-3xl" />
       </div>
 
@@ -50,11 +47,11 @@ export default function LoginPage() {
         transition={{ duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="overflow-hidden border-primary/10 shadow-2xl shadow-primary/5">
+        <Card className="border-primary/10 shadow-primary/5 overflow-hidden shadow-2xl">
           {/* Top gradient bar */}
-          <div className="h-1 w-full bg-gradient-to-r from-primary via-cyan-400 to-primary" />
+          <div className="from-primary to-primary h-1 w-full bg-gradient-to-r via-cyan-400" />
 
-          <CardHeader className="space-y-1 pb-4 pt-8 text-center">
+          <CardHeader className="space-y-1 pt-8 pb-4 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -69,12 +66,8 @@ export default function LoginPage() {
                 className="h-16 w-16 drop-shadow-lg"
               />
             </motion.div>
-            <CardTitle className="text-2xl font-bold">
-              Bienvenido de vuelta
-            </CardTitle>
-            <CardDescription>
-              Ingresa tus credenciales para acceder a tu cuenta
-            </CardDescription>
+            <CardTitle className="text-2xl font-bold">Bienvenido de vuelta</CardTitle>
+            <CardDescription>Ingresa tus credenciales para acceder a tu cuenta</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -93,7 +86,7 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   required
                   autoComplete="email"
-                  className="h-11 transition-shadow focus:shadow-md focus:shadow-primary/10"
+                  className="focus:shadow-primary/10 h-11 transition-shadow focus:shadow-md"
                 />
               </motion.div>
 
@@ -111,7 +104,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="h-11 transition-shadow focus:shadow-md focus:shadow-primary/10"
+                  className="focus:shadow-primary/10 h-11 transition-shadow focus:shadow-md"
                 />
               </motion.div>
 
@@ -132,7 +125,7 @@ export default function LoginPage() {
               >
                 <LoadingButton
                   type="submit"
-                  className="h-11 w-full bg-gradient-to-r from-primary to-cyan-500 text-white shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                  className="from-primary shadow-primary/25 hover:shadow-primary/30 h-11 w-full bg-gradient-to-r to-cyan-500 text-white shadow-lg transition-all hover:shadow-xl"
                   loading={loading}
                   loadingText="Iniciando sesión..."
                 >
@@ -150,7 +143,7 @@ export default function LoginPage() {
               <span className="text-muted-foreground">¿No tienes cuenta? </span>
               <Link
                 href="/signup"
-                className="font-medium text-primary transition-colors hover:text-primary/80"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 Crear cuenta
               </Link>
@@ -167,7 +160,7 @@ export default function LoginPage() {
         >
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
           >
             <Sparkles className="h-3 w-3" />
             Ordénate — Tu mente, en orden.

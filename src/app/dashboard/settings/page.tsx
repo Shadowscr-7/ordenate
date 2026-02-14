@@ -1,13 +1,15 @@
 // ============================================================
 // Settings Page — Profile + Billing
 // ============================================================
-
 import { Suspense } from "react";
+
+import { Loader2 } from "lucide-react";
+
 import { getCurrentUser } from "@/lib/auth/actions";
+
+import { BillingPanel } from "@/components/billing/billing-panel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
-import { BillingPanel } from "@/components/billing/billing-panel";
 
 export const metadata = {
   title: "Configuración",
@@ -18,12 +20,10 @@ export default async function SettingsPage() {
   const workspace = user?.memberships[0]?.workspace;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
+    <div className="animate-fade-in mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-        <p className="text-muted-foreground mt-1">
-          Gestiona tu cuenta y suscripción.
-        </p>
+        <p className="text-muted-foreground mt-1">Gestiona tu cuenta y suscripción.</p>
       </div>
 
       {/* Profile */}
@@ -55,7 +55,7 @@ export default async function SettingsPage() {
         fallback={
           <Card>
             <CardContent className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
             </CardContent>
           </Card>
         }

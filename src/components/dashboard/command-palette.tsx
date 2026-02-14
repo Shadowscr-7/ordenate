@@ -4,22 +4,15 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Brain,
-  History,
-  Home,
-  Kanban,
-  Moon,
-  Plus,
-  Settings,
-  Sun,
-  Target,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
+
+import { Brain, History, Home, Kanban, Moon, Plus, Settings, Sun, Target } from "lucide-react";
 
 import { ROUTES } from "@/lib/constants";
+
 import {
   CommandDialog,
   CommandEmpty,
@@ -41,7 +34,8 @@ export function CommandPalette() {
     function onKeyDown(e: KeyboardEvent) {
       // Skip when inside input/textarea
       const tag = (e.target as HTMLElement)?.tagName;
-      const isInput = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+      const isInput =
+        tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
 
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -62,13 +56,10 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [router]);
 
-  const runAction = useCallback(
-    (action: () => void) => {
-      setOpen(false);
-      action();
-    },
-    [],
-  );
+  const runAction = useCallback((action: () => void) => {
+    setOpen(false);
+    action();
+  }, []);
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -112,23 +103,17 @@ export function CommandPalette() {
         <CommandSeparator />
 
         <CommandGroup heading="Apariencia">
-          <CommandItem
-            onSelect={() => runAction(() => setTheme("light"))}
-          >
+          <CommandItem onSelect={() => runAction(() => setTheme("light"))}>
             <Sun className="mr-2 h-4 w-4" />
             Tema claro
             {theme === "light" && <CommandShortcut>✓</CommandShortcut>}
           </CommandItem>
-          <CommandItem
-            onSelect={() => runAction(() => setTheme("dark"))}
-          >
+          <CommandItem onSelect={() => runAction(() => setTheme("dark"))}>
             <Moon className="mr-2 h-4 w-4" />
             Tema oscuro
             {theme === "dark" && <CommandShortcut>✓</CommandShortcut>}
           </CommandItem>
-          <CommandItem
-            onSelect={() => runAction(() => setTheme("system"))}
-          >
+          <CommandItem onSelect={() => runAction(() => setTheme("system"))}>
             <Brain className="mr-2 h-4 w-4" />
             Tema del sistema
             {theme === "system" && <CommandShortcut>✓</CommandShortcut>}

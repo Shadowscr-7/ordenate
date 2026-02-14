@@ -5,14 +5,14 @@
 "use client";
 
 import * as React from "react";
+
+import type { VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 
 import { Button, type buttonVariants } from "@/components/ui/button";
-import type { VariantProps } from "class-variance-authority";
 
 interface LoadingButtonProps
-  extends React.ComponentProps<"button">,
-    VariantProps<typeof buttonVariants> {
+  extends React.ComponentProps<"button">, VariantProps<typeof buttonVariants> {
   loading?: boolean;
   loadingText?: string;
   asChild?: boolean;

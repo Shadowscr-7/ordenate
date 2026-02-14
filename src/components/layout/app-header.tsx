@@ -5,19 +5,15 @@
 "use client";
 
 import { useState } from "react";
+
 import { useTheme } from "next-themes";
-import {
-  LogOut,
-  Moon,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Sun,
-} from "lucide-react";
+
+import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 
 import { signOut } from "@/lib/auth/actions";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,11 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AppHeaderProps {
   sidebarCollapsed: boolean;
@@ -54,7 +47,7 @@ export function AppHeader({
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : userEmail?.slice(0, 2).toUpperCase() ?? "OD";
+    : (userEmail?.slice(0, 2).toUpperCase() ?? "OD");
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -62,7 +55,7 @@ export function AppHeader({
   }
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm">
+    <header className="bg-background/80 flex h-14 items-center justify-between border-b px-4 backdrop-blur-sm">
       {/* Left: Toggle sidebar */}
       <Tooltip>
         <TooltipTrigger asChild>
@@ -92,13 +85,11 @@ export function AppHeader({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() =>
-                setTheme(theme === "dark" ? "light" : "dark")
-              }
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="transition-transform duration-200 hover:scale-105"
             >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+              <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
               <span className="sr-only">Cambiar tema</span>
             </Button>
           </TooltipTrigger>
@@ -110,10 +101,10 @@ export function AppHeader({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 transition-all hover:ring-primary/40"
+              className="ring-primary/20 hover:ring-primary/40 relative h-9 w-9 rounded-full ring-2 transition-all"
             >
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-cyan-400/20 text-xs font-bold text-primary">
+                <AvatarFallback className="from-primary/20 text-primary bg-gradient-to-br to-cyan-400/20 text-xs font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -122,17 +113,13 @@ export function AppHeader({
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <div className="flex items-center justify-start gap-2 p-2">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-cyan-400/20 text-xs font-bold text-primary">
+                <AvatarFallback className="from-primary/20 text-primary bg-gradient-to-br to-cyan-400/20 text-xs font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col space-y-1 leading-none">
-                {userName && (
-                  <p className="text-sm font-medium">{userName}</p>
-                )}
-                {userEmail && (
-                  <p className="text-xs text-muted-foreground">{userEmail}</p>
-                )}
+                {userName && <p className="text-sm font-medium">{userName}</p>}
+                {userEmail && <p className="text-muted-foreground text-xs">{userEmail}</p>}
               </div>
             </div>
             <DropdownMenuSeparator />

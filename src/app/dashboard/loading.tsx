@@ -1,7 +1,6 @@
 // ============================================================
 // Loading Page — Dashboard skeleton
 // ============================================================
-
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {

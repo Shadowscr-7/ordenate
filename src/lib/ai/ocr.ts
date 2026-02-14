@@ -4,7 +4,6 @@
 // Accepts a base64-encoded image and extracts text content.
 // No external storage needed — image sent directly to GPT-4o.
 // ============================================================
-
 import { getOpenAI } from "./openai";
 
 export interface OCRResult {

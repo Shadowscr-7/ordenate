@@ -5,8 +5,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+
 import {
   AlertTriangle,
   Calendar,
@@ -18,6 +19,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +37,10 @@ interface SubscriptionInfo {
   dumpsLimit: number | null;
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
   ACTIVE: { label: "Activa", variant: "default" },
   PAST_DUE: { label: "Pago pendiente", variant: "destructive" },
   CANCELED: { label: "Cancelada", variant: "secondary" },
@@ -44,12 +49,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
 };
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  BASIC: [
-    "10 Brain Dumps al mes",
-    "Tablero Eisenhower",
-    "Vista Pareto",
-    "Historial de 30 días",
-  ],
+  BASIC: ["10 Brain Dumps al mes", "Tablero Eisenhower", "Vista Pareto", "Historial de 30 días"],
   PRO: [
     "Brain Dumps ilimitados",
     "Tablero Eisenhower",
@@ -138,7 +138,7 @@ export function BillingPanel() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <Loader2 className="text-primary h-6 w-6 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -157,15 +157,23 @@ export function BillingPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {isPro ? <Crown className="h-5 w-5 text-amber-500" /> : <Zap className="h-5 w-5 text-blue-500" />}
+            {isPro ? (
+              <Crown className="h-5 w-5 text-amber-500" />
+            ) : (
+              <Zap className="h-5 w-5 text-blue-500" />
+            )}
             Plan {sub.plan}
             <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
             {sub.cancelAtPeriodEnd && (
-              <Badge variant="destructive" className="text-[10px]">Se cancela al final del período</Badge>
+              <Badge variant="destructive" className="text-[10px]">
+                Se cancela al final del período
+              </Badge>
             )}
           </CardTitle>
           <CardDescription>
-            {isPro ? "Acceso completo a todas las funcionalidades" : "Plan básico con funcionalidades esenciales"}
+            {isPro
+              ? "Acceso completo a todas las funcionalidades"
+              : "Plan básico con funcionalidades esenciales"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -185,7 +193,7 @@ export function BillingPanel() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Brain Dumps este mes</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {sub.dumpsLimit
                   ? `${sub.dumpsThisMonth} de ${sub.dumpsLimit} usados`
                   : `${sub.dumpsThisMonth} creados (ilimitados)`}
@@ -193,15 +201,19 @@ export function BillingPanel() {
             </div>
             {sub.dumpsLimit && (
               <div className="flex items-center gap-2">
-                <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                <div className="bg-muted h-2 w-24 overflow-hidden rounded-full">
                   <div
                     className={`h-full rounded-full transition-all ${
                       sub.dumpsThisMonth >= sub.dumpsLimit ? "bg-red-500" : "bg-primary"
                     }`}
-                    style={{ width: `${Math.min((sub.dumpsThisMonth / sub.dumpsLimit) * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min((sub.dumpsThisMonth / sub.dumpsLimit) * 100, 100)}%`,
+                    }}
                   />
                 </div>
-                <span className={`text-xs font-mono ${sub.dumpsThisMonth >= sub.dumpsLimit ? "text-red-500" : ""}`}>
+                <span
+                  className={`font-mono text-xs ${sub.dumpsThisMonth >= sub.dumpsLimit ? "text-red-500" : ""}`}
+                >
                   {sub.dumpsThisMonth}/{sub.dumpsLimit}
                 </span>
               </div>
@@ -212,7 +224,7 @@ export function BillingPanel() {
           {periodEnd && hasStripe && (
             <>
               <Separator />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4" />
                 {sub.cancelAtPeriodEnd
                   ? `Tu plan se cancela el ${periodEnd.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}`
@@ -226,11 +238,12 @@ export function BillingPanel() {
             <>
               <Separator />
               <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                 <div>
                   <p className="text-sm font-medium text-amber-600">Límite alcanzado</p>
-                  <p className="text-xs text-muted-foreground">
-                    Has usado todos tus brain dumps de este mes. Actualiza a Pro para dumps ilimitados.
+                  <p className="text-muted-foreground text-xs">
+                    Has usado todos tus brain dumps de este mes. Actualiza a Pro para dumps
+                    ilimitados.
                   </p>
                 </div>
               </div>
@@ -249,23 +262,23 @@ export function BillingPanel() {
         </CardHeader>
         <CardContent className="space-y-3">
           {!isPro && (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <div className="border-primary/20 bg-primary/5 rounded-lg border p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="font-semibold flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                  <h4 className="flex items-center gap-1.5 font-semibold">
+                    <Sparkles className="text-primary h-4 w-4" />
                     Actualizar a Pro
                   </h4>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Brain dumps ilimitados, IA avanzada, integraciones y más.
                   </p>
-                  <p className="text-2xl font-bold mt-2">
-                    $19<span className="text-sm font-normal text-muted-foreground">/mes</span>
+                  <p className="mt-2 text-2xl font-bold">
+                    $19<span className="text-muted-foreground text-sm font-normal">/mes</span>
                   </p>
                 </div>
               </div>
               <Button
-                className="mt-3 w-full bg-gradient-to-r from-primary to-cyan-500 text-white shadow-lg shadow-primary/25"
+                className="from-primary shadow-primary/25 mt-3 w-full bg-gradient-to-r to-cyan-500 text-white shadow-lg"
                 onClick={() => startCheckout("PRO")}
                 disabled={!!actionLoading}
               >
@@ -296,7 +309,7 @@ export function BillingPanel() {
           )}
 
           {!hasStripe && !isPro && (
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-center text-xs">
               Actualmente en plan gratuito. Suscríbete para desbloquear más funciones.
             </p>
           )}

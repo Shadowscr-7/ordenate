@@ -2,19 +2,20 @@
 // Stripe Checkout API — Create checkout session
 // POST /api/stripe/checkout
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { getStripe, STRIPE_PRICES } from "@/lib/stripe";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
 import {
-  apiSuccess,
   apiError,
-  apiUnauthorized,
   apiServerError,
+  apiSuccess,
+  apiUnauthorized,
   apiValidationError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
+import { STRIPE_PRICES, getStripe } from "@/lib/stripe";
 
 const checkoutSchema = z.object({
   plan: z.enum(["BASIC", "PRO"]),
@@ -46,7 +47,10 @@ export async function POST(request: NextRequest) {
     const priceId = STRIPE_PRICES[plan];
 
     if (!priceId) {
-      return apiError(`Stripe price not configured for plan ${plan}. Set STRIPE_PRICE_${plan} env var.`, 500);
+      return apiError(
+        `Stripe price not configured for plan ${plan}. Set STRIPE_PRICE_${plan} env var.`,
+        500,
+      );
     }
 
     const stripe = getStripe();
@@ -77,7 +81,10 @@ export async function POST(request: NextRequest) {
 
     // If already has an active Stripe subscription, redirect to portal instead
     if (subscription?.stripeSubId && subscription.status === "ACTIVE") {
-      return apiError("Ya tienes una suscripción activa. Usa el portal para gestionar tu plan.", 409);
+      return apiError(
+        "Ya tienes una suscripción activa. Usa el portal para gestionar tu plan.",
+        409,
+      );
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

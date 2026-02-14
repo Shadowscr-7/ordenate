@@ -5,7 +5,6 @@
 // Uses service_role key — bypasses RLS.
 // Only use for server-side admin operations.
 // ============================================================
-
 import { createClient } from "@supabase/supabase-js";
 
 export const supabaseAdmin = createClient(

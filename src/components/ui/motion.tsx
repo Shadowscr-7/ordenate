@@ -4,7 +4,8 @@
 
 "use client";
 
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { type HTMLMotionProps, motion } from "framer-motion";
+
 import { cn } from "@/lib/utils";
 
 // ─── Fade In wrapper ────────────────────────────────────────
@@ -146,13 +147,7 @@ export function PageTransition({
 
 // ─── Animated counter ───────────────────────────────────────
 
-export function AnimatedNumber({
-  value,
-  className,
-}: {
-  value: number;
-  className?: string;
-}) {
+export function AnimatedNumber({ value, className }: { value: number; className?: string }) {
   return (
     <motion.span
       key={value}
@@ -179,13 +174,13 @@ export function GlowCard({
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className={cn(
-        "group relative overflow-hidden rounded-xl border bg-card p-6 transition-shadow hover:shadow-lg hover:shadow-primary/10",
+        "group bg-card hover:shadow-primary/10 relative overflow-hidden rounded-xl border p-6 transition-shadow hover:shadow-lg",
         className,
       )}
     >
       {/* Gradient glow on hover */}
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-cyan-400/10 to-primary/10 blur-xl" />
+        <div className="from-primary/10 to-primary/10 absolute -inset-1 bg-gradient-to-r via-cyan-400/10 blur-xl" />
       </div>
       <div className="relative z-10">{children}</div>
     </motion.div>

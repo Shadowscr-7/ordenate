@@ -1,10 +1,10 @@
 // ============================================================
 // Plan Gating — Check subscription limits & features
 // ============================================================
-
-import { db } from "@/lib/db";
 import { PLAN_LIMITS } from "@/types";
 import type { SubscriptionPlan } from "@/types";
+
+import { db } from "@/lib/db";
 
 interface GateResult {
   allowed: boolean;

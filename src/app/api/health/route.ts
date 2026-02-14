@@ -1,7 +1,6 @@
 // ============================================================
 // Health Check API — Verifies system status
 // ============================================================
-
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";

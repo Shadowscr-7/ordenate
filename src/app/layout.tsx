@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Analytics } from "@vercel/analytics/react";
+
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import "./globals.css";
 
@@ -48,8 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Ordénate — Tu mente, en orden",
-    description:
-      "Captura ideas, prioriza con Eisenhower y Pareto. Potenciado por IA.",
+    description: "Captura ideas, prioriza con Eisenhower y Pareto. Potenciado por IA.",
   },
   robots: {
     index: true,
@@ -64,9 +64,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

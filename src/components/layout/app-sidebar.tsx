@@ -4,30 +4,19 @@
 
 "use client";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
-import {
-  Brain,
-  History,
-  Home,
-  Kanban,
-  ListTodo,
-  Plus,
-  Settings,
-  Target,
-} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { cn } from "@/lib/utils";
+import { Brain, History, Home, Kanban, ListTodo, Plus, Settings, Target } from "lucide-react";
+
 import { ROUTES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const NAV_ITEMS = [
   {
@@ -78,19 +67,18 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className={cn(
-        "flex items-center justify-center border-b",
-        collapsed ? "h-14 px-2" : "px-4 py-5",
-      )}>
+      <div
+        className={cn(
+          "flex items-center justify-center border-b",
+          collapsed ? "h-14 px-2" : "px-4 py-5",
+        )}
+      >
         <Image
           src="/images/logo.png"
           alt="Ordénate"
           width={collapsed ? 40 : 180}
           height={collapsed ? 40 : 180}
-          className={cn(
-            "shrink-0 object-contain",
-            collapsed ? "h-auto w-10" : "h-auto w-44",
-          )}
+          className={cn("shrink-0 object-contain", collapsed ? "h-auto w-10" : "h-auto w-44")}
           priority
         />
       </div>
@@ -102,7 +90,7 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
             <Button
               asChild
               className={cn(
-                "w-full bg-gradient-to-r from-primary to-cyan-500 text-white shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30",
+                "from-primary shadow-primary/20 hover:shadow-primary/30 w-full bg-gradient-to-r to-cyan-500 text-white shadow-md transition-all hover:shadow-lg",
                 collapsed && "px-0",
               )}
               size={collapsed ? "icon" : "default"}
@@ -113,9 +101,7 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
               </Link>
             </Button>
           </TooltipTrigger>
-          {collapsed && (
-            <TooltipContent side="right">Nuevo Dump (N)</TooltipContent>
-          )}
+          {collapsed && <TooltipContent side="right">Nuevo Dump (N)</TooltipContent>}
         </Tooltip>
       </div>
 
@@ -150,9 +136,7 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
                     {!collapsed && <span>{item.label}</span>}
                   </Link>
                 </TooltipTrigger>
-                {collapsed && (
-                  <TooltipContent side="right">{item.label}</TooltipContent>
-                )}
+                {collapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
               </Tooltip>
             );
           })}
@@ -184,9 +168,7 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
               {!collapsed && <span>Configuración</span>}
             </Link>
           </TooltipTrigger>
-          {collapsed && (
-            <TooltipContent side="right">Configuración</TooltipContent>
-          )}
+          {collapsed && <TooltipContent side="right">Configuración</TooltipContent>}
         </Tooltip>
       </div>
     </aside>

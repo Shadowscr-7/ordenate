@@ -1,8 +1,8 @@
 // ============================================================
 // Dumps Page — Lista completa de todos los brain dumps
 // ============================================================
-
 import Link from "next/link";
+
 import {
   ArrowRight,
   Brain,
@@ -14,10 +14,11 @@ import {
 } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/auth/actions";
-import { db } from "@/lib/db";
 import { ROUTES } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
+import { db } from "@/lib/db";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export const metadata = {
@@ -71,26 +72,24 @@ export default async function DumpsPage() {
   const totalTasks = dumps.reduce((sum, dump) => sum + dump._count.tasks, 0);
   const doneTasks = dumps.reduce(
     (sum, dump) => sum + dump.tasks.filter((t) => t.status === "DONE").length,
-    0
+    0,
   );
   const pendingTasks = totalTasks - doneTasks;
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 py-8 px-4">
+    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Brain className="h-8 w-8 text-primary" />
+          <h1 className="flex items-center gap-3 text-3xl font-bold">
+            <Brain className="text-primary h-8 w-8" />
             Brain Dumps
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Todos tus volcados mentales organizados
-          </p>
+          <p className="text-muted-foreground mt-1">Todos tus volcados mentales organizados</p>
         </div>
         <Button asChild>
           <Link href={ROUTES.NEW_DUMP}>
-            <Brain className="w-4 h-4 mr-2" />
+            <Brain className="mr-2 h-4 w-4" />
             Nuevo Dump
           </Link>
         </Button>
@@ -100,12 +99,12 @@ export default async function DumpsPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <Brain className="h-5 w-5 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-3">
+              <Brain className="text-primary h-5 w-5" />
             </div>
             <div>
               <p className="text-2xl font-bold">{totalDumps}</p>
-              <p className="text-xs text-muted-foreground">Total Dumps</p>
+              <p className="text-muted-foreground text-xs">Total Dumps</p>
             </div>
           </div>
         </Card>
@@ -117,7 +116,7 @@ export default async function DumpsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{totalTasks}</p>
-              <p className="text-xs text-muted-foreground">Total Tareas</p>
+              <p className="text-muted-foreground text-xs">Total Tareas</p>
             </div>
           </div>
         </Card>
@@ -129,7 +128,7 @@ export default async function DumpsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{doneTasks}</p>
-              <p className="text-xs text-muted-foreground">Completadas</p>
+              <p className="text-muted-foreground text-xs">Completadas</p>
             </div>
           </div>
         </Card>
@@ -141,7 +140,7 @@ export default async function DumpsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{pendingTasks}</p>
-              <p className="text-xs text-muted-foreground">Pendientes</p>
+              <p className="text-muted-foreground text-xs">Pendientes</p>
             </div>
           </div>
         </Card>
@@ -150,14 +149,14 @@ export default async function DumpsPage() {
       {/* Dumps List */}
       {dumps.length === 0 ? (
         <Card className="p-12 text-center">
-          <Brain className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-          <h3 className="text-xl font-semibold mb-2">No hay brain dumps</h3>
+          <Brain className="text-muted-foreground mx-auto mb-4 h-16 w-16 opacity-50" />
+          <h3 className="mb-2 text-xl font-semibold">No hay brain dumps</h3>
           <p className="text-muted-foreground mb-6">
             Crea tu primer volcado mental para empezar a organizar tus ideas.
           </p>
           <Button asChild>
             <Link href={ROUTES.NEW_DUMP}>
-              <Brain className="w-4 h-4 mr-2" />
+              <Brain className="mr-2 h-4 w-4" />
               Crear Brain Dump
             </Link>
           </Button>
@@ -175,33 +174,31 @@ export default async function DumpsPage() {
             return (
               <Card
                 key={dump.id}
-                className="p-4 hover:border-primary/50 transition-all hover:shadow-sm"
+                className="hover:border-primary/50 p-4 transition-all hover:shadow-sm"
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
-                  <div className="rounded-lg bg-primary/10 p-3 shrink-0">
-                    <Brain className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/10 shrink-0 rounded-lg p-3">
+                    <Brain className="text-primary h-6 w-6" />
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0 space-y-2">
+                  <div className="min-w-0 flex-1 space-y-2">
                     {/* Title and badges */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <Link
                           href={ROUTES.BRAIN_DUMP(dump.id)}
-                          className="text-lg font-semibold hover:text-primary transition-colors line-clamp-1"
+                          className="hover:text-primary line-clamp-1 text-lg font-semibold transition-colors"
                         >
                           {dump.title}
                         </Link>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant={statusConfig.variant}>
-                            {statusConfig.label}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
                             {sourceConfig.icon} {sourceConfig.label}
                           </span>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Calendar className="h-3 w-3" />
                             {new Date(dump.createdAt).toLocaleDateString("es-ES", {
                               day: "numeric",
@@ -217,32 +214,32 @@ export default async function DumpsPage() {
                     <div className="flex items-center gap-4">
                       {/* Progress bar */}
                       <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="text-muted-foreground flex items-center justify-between text-xs">
                           <span>
                             {doneCount} de {totalCount} completadas
                           </span>
                           <span>{Math.round(progress)}%</span>
                         </div>
-                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div className="bg-secondary h-2 overflow-hidden rounded-full">
                           <div
-                            className="h-full bg-primary transition-all"
+                            className="bg-primary h-full transition-all"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex shrink-0 gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <Link href={ROUTES.BRAIN_DUMP(dump.id)}>
-                            <ArrowRight className="w-4 h-4 mr-1" />
+                            <ArrowRight className="mr-1 h-4 w-4" />
                             Ver tareas
                           </Link>
                         </Button>
                         {pendingCount > 0 && (
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`${ROUTES.EISENHOWER}?dumpId=${dump.id}`}>
-                              <LayoutGrid className="w-4 h-4 mr-1" />
+                              <LayoutGrid className="mr-1 h-4 w-4" />
                               Eisenhower
                             </Link>
                           </Button>

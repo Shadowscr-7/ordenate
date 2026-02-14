@@ -1,17 +1,17 @@
 // ============================================================
 // Task Reorder API — Bulk update quadrant & sort order
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
-import { reorderTasksSchema } from "@/lib/validations";
+
 import {
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
+import { reorderTasksSchema } from "@/lib/validations";
 
 // PATCH /api/tasks/reorder — bulk update quadrant + sortOrder
 export async function PATCH(request: NextRequest) {

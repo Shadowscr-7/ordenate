@@ -1,16 +1,11 @@
 // ============================================================
 // Brain Dump Detail API — Get, Update, Delete a brain dump
 // ============================================================
-
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+
+import { apiNotFound, apiServerError, apiSuccess, apiUnauthorized } from "@/lib/api-response";
 import { getSession } from "@/lib/auth/actions";
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiNotFound,
-  apiServerError,
-} from "@/lib/api-response";
+import { db } from "@/lib/db";
 
 async function getUserWorkspaceId(authUserId: string): Promise<string | null> {
   const user = await db.user.findUnique({
@@ -23,10 +18,7 @@ async function getUserWorkspaceId(authUserId: string): Promise<string | null> {
 }
 
 // GET /api/braindump/[id]
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
@@ -54,10 +46,7 @@ export async function GET(
 }
 
 // PATCH /api/braindump/[id] — Update status or title
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();

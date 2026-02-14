@@ -4,9 +4,9 @@
 // Takes a list of tasks and returns suggested quadrant
 // classifications with confidence scores.
 // ============================================================
+import type { EisenhowerQuadrant } from "@/types";
 
 import { getOpenAI } from "./openai";
-import type { EisenhowerQuadrant } from "@/types";
 
 export interface ClassifyInput {
   text: string;
@@ -57,14 +57,17 @@ Responde SOLO con JSON válido, SIN markdown ni bloques de código.`;
 const USER_PROMPT = (tasks: ClassifyInput[]) =>
   `Clasifica estas tareas en cuadrantes Eisenhower:
 
-${tasks.map((t, i) => {
-  let line = `${i + 1}. ${t.text}`;
-  if (t.priority) line += ` | Prioridad: ${t.priority}`;
-  if (t.feeling) line += ` | Sentimiento: ${t.feeling}`;
-  if (t.estimatedValue && t.estimatedUnit) line += ` | Tiempo: ${t.estimatedValue} ${t.estimatedUnit}`;
-  if (t.category) line += ` | Categoría: ${t.category}`;
-  return line;
-}).join("\n")}
+${tasks
+  .map((t, i) => {
+    let line = `${i + 1}. ${t.text}`;
+    if (t.priority) line += ` | Prioridad: ${t.priority}`;
+    if (t.feeling) line += ` | Sentimiento: ${t.feeling}`;
+    if (t.estimatedValue && t.estimatedUnit)
+      line += ` | Tiempo: ${t.estimatedValue} ${t.estimatedUnit}`;
+    if (t.category) line += ` | Categoría: ${t.category}`;
+    return line;
+  })
+  .join("\n")}
 
 Responde con este formato JSON exacto:
 {
@@ -78,15 +81,11 @@ Responde con este formato JSON exacto:
   ]
 }`;
 
-export async function classifyTasks(
-  tasks: string[] | ClassifyInput[],
-): Promise<ClassifyResult> {
+export async function classifyTasks(tasks: string[] | ClassifyInput[]): Promise<ClassifyResult> {
   const openai = getOpenAI();
 
   // Normalize: accept both string[] and ClassifyInput[]
-  const normalized: ClassifyInput[] = tasks.map((t) =>
-    typeof t === "string" ? { text: t } : t,
-  );
+  const normalized: ClassifyInput[] = tasks.map((t) => (typeof t === "string" ? { text: t } : t));
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -110,12 +109,7 @@ export async function classifyTasks(
     throw new Error("Invalid AI response: missing tasks array");
   }
 
-  const validQuadrants = new Set([
-    "Q1_DO",
-    "Q2_SCHEDULE",
-    "Q3_DELEGATE",
-    "Q4_DELETE",
-  ]);
+  const validQuadrants = new Set(["Q1_DO", "Q2_SCHEDULE", "Q3_DELEGATE", "Q4_DELETE"]);
 
   return {
     tasks: parsed.tasks

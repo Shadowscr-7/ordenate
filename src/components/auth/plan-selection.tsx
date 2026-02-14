@@ -5,25 +5,27 @@
 "use client";
 
 import { useState } from "react";
+
 import { motion } from "framer-motion";
 import {
+  ArrowLeft,
+  Bot,
+  Brain,
+  Calendar,
   Check,
   Crown,
-  Sparkles,
-  Brain,
   Kanban,
-  Target,
-  Calendar,
   MessageCircle,
-  Bot,
+  Sparkles,
+  Target,
   Zap,
-  ArrowLeft,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
 
 type Plan = "BASIC" | "PRO";
 
@@ -47,11 +49,7 @@ const PLANS = [
       { icon: Target, label: "Vista Pareto" },
       { icon: Check, label: "Hasta 10 dumps/mes" },
     ],
-    notIncluded: [
-      "Procesamiento con IA",
-      "Bot de Telegram / WhatsApp",
-      "Google Calendar",
-    ],
+    notIncluded: ["Procesamiento con IA", "Bot de Telegram / WhatsApp", "Google Calendar"],
   },
   {
     id: "PRO" as Plan,
@@ -85,10 +83,8 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Elige tu plan
-        </h2>
-        <p className="mt-2 text-muted-foreground">
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Elige tu plan</h2>
+        <p className="text-muted-foreground mt-2">
           Selecciona el plan que mejor se adapte a tus necesidades
         </p>
       </motion.div>
@@ -108,14 +104,14 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
               className={cn(
                 "group relative w-full rounded-2xl border-2 p-6 text-left transition-all duration-300",
                 selectedPlan === plan.id
-                  ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                  ? "border-primary bg-primary/5 shadow-primary/10 shadow-lg"
                   : "border-border hover:border-primary/40 hover:bg-accent/30",
-                plan.id === "PRO" && "ring-1 ring-primary/20",
+                plan.id === "PRO" && "ring-primary/20 ring-1",
               )}
             >
               {/* Badge */}
               {plan.badge && (
-                <Badge className="absolute -top-3 right-4 bg-gradient-to-r from-primary to-cyan-400 text-white shadow-md">
+                <Badge className="from-primary absolute -top-3 right-4 bg-gradient-to-r to-cyan-400 text-white shadow-md">
                   <Sparkles className="mr-1 h-3 w-3" />
                   {plan.badge}
                 </Badge>
@@ -124,7 +120,7 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
               {/* Selection indicator */}
               <div
                 className={cn(
-                  "absolute right-4 top-6 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
+                  "absolute top-6 right-4 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
                   selectedPlan === plan.id
                     ? "border-primary bg-primary text-white"
                     : "border-muted-foreground/30",
@@ -139,7 +135,7 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
                   className={cn(
                     "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
                     plan.id === "PRO"
-                      ? "bg-gradient-to-br from-primary/20 to-cyan-400/20"
+                      ? "from-primary/20 bg-gradient-to-br to-cyan-400/20"
                       : "bg-primary/10",
                   )}
                 >
@@ -152,17 +148,13 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">{plan.name}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {plan.description}
-                  </p>
+                  <p className="text-muted-foreground text-xs">{plan.description}</p>
                 </div>
               </div>
 
               {/* Price */}
               <div className="mb-6">
-                <span className="text-4xl font-bold tracking-tight">
-                  ${plan.price}
-                </span>
+                <span className="text-4xl font-bold tracking-tight">${plan.price}</span>
                 <span className="text-muted-foreground">/mes</span>
               </div>
 
@@ -170,8 +162,8 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature.label} className="flex items-center gap-3 text-sm">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-                      <feature.icon className="h-3 w-3 text-primary" />
+                    <div className="bg-primary/10 flex h-5 w-5 items-center justify-center rounded-full">
+                      <feature.icon className="text-primary h-3 w-3" />
                     </div>
                     <span>{feature.label}</span>
                   </li>
@@ -179,10 +171,10 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
                 {plan.notIncluded.map((feature) => (
                   <li
                     key={feature}
-                    className="flex items-center gap-3 text-sm text-muted-foreground/60 line-through"
+                    className="text-muted-foreground/60 flex items-center gap-3 text-sm line-through"
                   >
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted">
-                      <Check className="h-3 w-3 text-muted-foreground/40" />
+                    <div className="bg-muted flex h-5 w-5 items-center justify-center rounded-full">
+                      <Check className="text-muted-foreground/40 h-3 w-3" />
                     </div>
                     <span>{feature}</span>
                   </li>
@@ -212,7 +204,8 @@ export function PlanSelection({ onSelect, onBack, loading }: PlanSelectionProps)
           size="lg"
           className="min-w-[180px]"
         >
-          Continuar con {selectedPlan === "PRO" ? "Pro" : selectedPlan === "BASIC" ? "Básico" : "..."}
+          Continuar con{" "}
+          {selectedPlan === "PRO" ? "Pro" : selectedPlan === "BASIC" ? "Básico" : "..."}
         </LoadingButton>
       </motion.div>
     </div>

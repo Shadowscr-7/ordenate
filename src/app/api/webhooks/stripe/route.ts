@@ -8,11 +8,12 @@
 //   customer.subscription.updated → sync changes
 //   customer.subscription.deleted → cancel subscription
 // ============================================================
-
 import { NextRequest, NextResponse } from "next/server";
+
 import Stripe from "stripe";
-import { getStripe } from "@/lib/stripe";
+
 import { db } from "@/lib/db";
+import { getStripe } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
@@ -165,7 +166,12 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
     where: { stripeSubId: sub.id },
     data: {
       plan,
-      status: (statusMap[sub.status] ?? "ACTIVE") as "ACTIVE" | "PAST_DUE" | "CANCELED" | "TRIALING" | "INCOMPLETE",
+      status: (statusMap[sub.status] ?? "ACTIVE") as
+        | "ACTIVE"
+        | "PAST_DUE"
+        | "CANCELED"
+        | "TRIALING"
+        | "INCOMPLETE",
       stripePriceId: priceId,
       currentPeriodStart: getSubPeriod(sub).start,
       currentPeriodEnd: getSubPeriod(sub).end,

@@ -113,10 +113,7 @@ export async function sendMessageWithKeyboard(
 /**
  * Answer a callback query (acknowledge button press)
  */
-export async function answerCallbackQuery(
-  callbackQueryId: string,
-  text?: string,
-) {
+export async function answerCallbackQuery(callbackQueryId: string, text?: string) {
   const res = await fetch(`${TELEGRAM_API}/answerCallbackQuery`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -131,11 +128,7 @@ export async function answerCallbackQuery(
 /**
  * Edit an existing message
  */
-export async function editMessageText(
-  chatId: number | string,
-  messageId: number,
-  text: string,
-) {
+export async function editMessageText(chatId: number | string, messageId: number, text: string) {
   const res = await fetch(`${TELEGRAM_API}/editMessageText`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

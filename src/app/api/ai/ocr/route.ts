@@ -1,27 +1,26 @@
 // ============================================================
 // AI OCR API — Extract text from uploaded image
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
 import { extractTextFromImage } from "@/lib/ai";
-import { hasProAccess } from "@/lib/plan-gate";
 import {
+  apiError,
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
+import { hasProAccess } from "@/lib/plan-gate";
 import { aiLimiter, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   image: z.string().min(1, "La imagen es requerida"), // base64
-  mimeType: z
-    .enum(["image/jpeg", "image/png", "image/webp", "image/gif"])
-    .default("image/jpeg"),
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]).default("image/jpeg"),
 });
 
 export async function POST(request: NextRequest) {
@@ -48,10 +47,7 @@ export async function POST(request: NextRequest) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) return apiValidationError(parsed.error);
 
-    const result = await extractTextFromImage(
-      parsed.data.image,
-      parsed.data.mimeType,
-    );
+    const result = await extractTextFromImage(parsed.data.image, parsed.data.mimeType);
 
     if (!result.text.trim()) {
       return apiError("No se pudo detectar texto en la imagen", 422);

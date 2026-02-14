@@ -1,17 +1,18 @@
 // ============================================================
 // Categories API — CRUD para categorías de tareas
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
 import {
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
 
 const createCategorySchema = z.object({
   name: z.string().min(1, "Nombre requerido").max(100),

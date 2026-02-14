@@ -1,7 +1,6 @@
 // ============================================================
 // Next.js Instrumentation — Load Sentry on server start
 // ============================================================
-
 import * as Sentry from "@sentry/nextjs";
 
 export async function register() {

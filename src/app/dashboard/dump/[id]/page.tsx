@@ -4,9 +4,19 @@
 
 "use client";
 
-import { useEffect, useState, useTransition, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
+
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+
+import {
+  FEELING_META,
+  PRIORITY_META,
+  TIME_UNIT_META,
+  type TaskFeeling,
+  type TaskPriority,
+  type TimeUnit,
+} from "@/types";
 import {
   Archive,
   ArrowLeft,
@@ -29,25 +39,12 @@ import {
   X,
 } from "lucide-react";
 
+import { ROUTES } from "@/lib/constants";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ROUTES } from "@/lib/constants";
-import {
-  PRIORITY_META,
-  FEELING_META,
-  TIME_UNIT_META,
-  type TaskPriority,
-  type TaskFeeling,
-  type TimeUnit,
-} from "@/types";
 
 interface Category {
   id: string;
@@ -79,7 +76,10 @@ interface BrainDump {
   tasks: Task[];
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+const STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+> = {
   DRAFT: { label: "Borrador", variant: "outline" },
   PROCESSING: { label: "Procesando", variant: "secondary" },
   PROCESSED: { label: "Procesado", variant: "default" },
@@ -95,21 +95,30 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 // Valid state transitions for BrainDump
-const DUMP_TRANSITIONS: Record<string, { label: string; target: string; icon: React.ReactNode }[]> = {
-  DRAFT: [
-    { label: "Marcar como procesado", target: "PROCESSED", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-  ],
-  PROCESSED: [
-    { label: "Archivar", target: "ARCHIVED", icon: <Archive className="h-3.5 w-3.5" /> },
-    { label: "Volver a borrador", target: "DRAFT", icon: <RotateCcw className="h-3.5 w-3.5" /> },
-  ],
-  ARCHIVED: [
-    { label: "Restaurar", target: "PROCESSED", icon: <RotateCcw className="h-3.5 w-3.5" /> },
-  ],
-  ERROR: [
-    { label: "Reintentar (borrador)", target: "DRAFT", icon: <RotateCcw className="h-3.5 w-3.5" /> },
-  ],
-};
+const DUMP_TRANSITIONS: Record<string, { label: string; target: string; icon: React.ReactNode }[]> =
+  {
+    DRAFT: [
+      {
+        label: "Marcar como procesado",
+        target: "PROCESSED",
+        icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+      },
+    ],
+    PROCESSED: [
+      { label: "Archivar", target: "ARCHIVED", icon: <Archive className="h-3.5 w-3.5" /> },
+      { label: "Volver a borrador", target: "DRAFT", icon: <RotateCcw className="h-3.5 w-3.5" /> },
+    ],
+    ARCHIVED: [
+      { label: "Restaurar", target: "PROCESSED", icon: <RotateCcw className="h-3.5 w-3.5" /> },
+    ],
+    ERROR: [
+      {
+        label: "Reintentar (borrador)",
+        target: "DRAFT",
+        icon: <RotateCcw className="h-3.5 w-3.5" />,
+      },
+    ],
+  };
 
 // Task status cycle
 const TASK_STATUS_INFO: Record<string, { label: string; color: string }> = {
@@ -119,10 +128,26 @@ const TASK_STATUS_INFO: Record<string, { label: string; color: string }> = {
 };
 
 const QUADRANT_BADGE: Record<string, { label: string; icon: string; className: string }> = {
-  Q1_DO: { label: "Urgente e Importante", icon: "🔴", className: "border-red-500/30 bg-red-500/10 text-red-500" },
-  Q2_SCHEDULE: { label: "No urgente, importante", icon: "🔵", className: "border-blue-500/30 bg-blue-500/10 text-blue-500" },
-  Q3_DELEGATE: { label: "Urgente, no importante", icon: "🟡", className: "border-yellow-500/30 bg-yellow-500/10 text-yellow-500" },
-  Q4_DELETE: { label: "Ni urgente, ni importante", icon: "⚪", className: "border-neutral-500/30 bg-neutral-500/10 text-neutral-400" },
+  Q1_DO: {
+    label: "Urgente e Importante",
+    icon: "🔴",
+    className: "border-red-500/30 bg-red-500/10 text-red-500",
+  },
+  Q2_SCHEDULE: {
+    label: "No urgente, importante",
+    icon: "🔵",
+    className: "border-blue-500/30 bg-blue-500/10 text-blue-500",
+  },
+  Q3_DELEGATE: {
+    label: "Urgente, no importante",
+    icon: "🟡",
+    className: "border-yellow-500/30 bg-yellow-500/10 text-yellow-500",
+  },
+  Q4_DELETE: {
+    label: "Ni urgente, ni importante",
+    icon: "⚪",
+    className: "border-neutral-500/30 bg-neutral-500/10 text-neutral-400",
+  },
 };
 
 export default function BrainDumpDetailPage() {
@@ -270,9 +295,7 @@ export default function BrainDumpDetailPage() {
 
   async function classifyWithAI() {
     if (!dump) return;
-    const pendingTasks = dump.tasks.filter(
-      (t) => t.status !== "HIDDEN" && !t.quadrant,
-    );
+    const pendingTasks = dump.tasks.filter((t) => t.status !== "HIDDEN" && !t.quadrant);
     if (pendingTasks.length === 0) return;
 
     setIsClassifying(true);
@@ -317,9 +340,7 @@ export default function BrainDumpDetailPage() {
 
   async function createFromPending() {
     if (!dump) return;
-    const pendingTasks = dump.tasks.filter(
-      (t) => t.status === "PENDING",
-    );
+    const pendingTasks = dump.tasks.filter((t) => t.status === "PENDING");
     if (pendingTasks.length === 0) {
       alert("No hay tareas pendientes en este dump");
       return;
@@ -381,7 +402,9 @@ export default function BrainDumpDetailPage() {
       const { data } = await res.json();
       // Add to local categories list immediately
       setCategories((prev) =>
-        prev.some((c) => c.id === data.id) ? prev : [...prev, data].sort((a, b) => a.name.localeCompare(b.name)),
+        prev.some((c) => c.id === data.id)
+          ? prev
+          : [...prev, data].sort((a, b) => a.name.localeCompare(b.name)),
       );
       // Optimistically assign
       updateLocalTask(taskId, { categoryId: data.id, category: { id: data.id, name: data.name } });
@@ -400,7 +423,7 @@ export default function BrainDumpDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -409,10 +432,8 @@ export default function BrainDumpDetailPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Brain className="mb-4 h-12 w-12 text-muted-foreground/50" />
-          <h3 className="mb-1 text-lg font-semibold">
-            {error || "Brain Dump no encontrado"}
-          </h3>
+          <Brain className="text-muted-foreground/50 mb-4 h-12 w-12" />
+          <h3 className="mb-1 text-lg font-semibold">{error || "Brain Dump no encontrado"}</h3>
           <Button asChild variant="outline" className="mt-4">
             <Link href={ROUTES.DASHBOARD}>
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -428,9 +449,7 @@ export default function BrainDumpDetailPage() {
   const pendingCount = dump.tasks.filter((t) => t.status === "PENDING").length;
   const doneCount = dump.tasks.filter((t) => t.status === "DONE").length;
   const hiddenCount = dump.tasks.filter((t) => t.status === "HIDDEN").length;
-  const visibleTasks = showHidden
-    ? dump.tasks
-    : dump.tasks.filter((t) => t.status !== "HIDDEN");
+  const visibleTasks = showHidden ? dump.tasks : dump.tasks.filter((t) => t.status !== "HIDDEN");
   const transitions = DUMP_TRANSITIONS[dump.status] ?? [];
 
   return (
@@ -444,17 +463,15 @@ export default function BrainDumpDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {dump.title || "Brain Dump"}
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">{dump.title || "Brain Dump"}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2 pl-10">
             <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {SOURCE_LABELS[dump.source] ?? dump.source}
             </span>
-            <span className="text-xs text-muted-foreground">·</span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">·</span>
+            <span className="text-muted-foreground text-xs">
               {new Date(dump.createdAt).toLocaleDateString("es-ES", {
                 day: "numeric",
                 month: "short",
@@ -466,7 +483,7 @@ export default function BrainDumpDetailPage() {
           </div>
           {/* Status transition buttons */}
           {transitions.length > 0 && (
-            <div className="flex flex-wrap gap-2 pl-10 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2 pl-10">
               {transitions.map((t) => (
                 <Button
                   key={t.target}
@@ -484,11 +501,11 @@ export default function BrainDumpDetailPage() {
           )}
           {/* Create from pending button */}
           {pendingCount > 0 && (
-            <div className="flex flex-wrap gap-2 pl-10 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2 pl-10">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1.5 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                className="h-7 gap-1.5 border-amber-500/50 text-xs text-amber-600 hover:bg-amber-500/10"
                 onClick={createFromPending}
                 disabled={isCreatingFromPending}
               >
@@ -519,26 +536,26 @@ export default function BrainDumpDetailPage() {
         <Card className="flex-1">
           <CardContent className="py-3 text-center">
             <p className="text-2xl font-bold">{dump.tasks.length}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-muted-foreground text-xs">Total</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
           <CardContent className="py-3 text-center">
             <p className="text-2xl font-bold text-amber-500">{pendingCount}</p>
-            <p className="text-xs text-muted-foreground">Pendientes</p>
+            <p className="text-muted-foreground text-xs">Pendientes</p>
           </CardContent>
         </Card>
         <Card className="flex-1">
           <CardContent className="py-3 text-center">
             <p className="text-2xl font-bold text-green-500">{doneCount}</p>
-            <p className="text-xs text-muted-foreground">Completadas</p>
+            <p className="text-muted-foreground text-xs">Completadas</p>
           </CardContent>
         </Card>
         {hiddenCount > 0 && (
           <Card className="flex-1">
             <CardContent className="py-3 text-center">
-              <p className="text-2xl font-bold text-muted-foreground">{hiddenCount}</p>
-              <p className="text-xs text-muted-foreground">Ocultas</p>
+              <p className="text-muted-foreground text-2xl font-bold">{hiddenCount}</p>
+              <p className="text-muted-foreground text-xs">Ocultas</p>
             </CardContent>
           </Card>
         )}
@@ -596,23 +613,26 @@ export default function BrainDumpDetailPage() {
         </CardHeader>
         <CardContent className="space-y-1">
           {visibleTasks.length === 0 && !showHidden ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground py-6 text-center text-sm">
               {dump.tasks.length === 0
                 ? "No hay tareas en este brain dump."
                 : "Todas las tareas están ocultas."}
             </p>
           ) : visibleTasks.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground py-6 text-center text-sm">
               No hay tareas en este brain dump.
             </p>
           ) : (
             visibleTasks.map((task) => (
-              <div key={task.id} className={`rounded-lg transition-colors ${task.status === "HIDDEN" ? "opacity-50" : ""}`}>
-                <div className="group flex items-center gap-2 px-2 py-2 hover:bg-muted/50">
+              <div
+                key={task.id}
+                className={`rounded-lg transition-colors ${task.status === "HIDDEN" ? "opacity-50" : ""}`}
+              >
+                <div className="group hover:bg-muted/50 flex items-center gap-2 px-2 py-2">
                   {/* Expand toggle */}
                   <button
                     onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                    className="shrink-0 text-muted-foreground/40 hover:text-foreground transition-colors"
+                    className="text-muted-foreground/40 hover:text-foreground shrink-0 transition-colors"
                   >
                     {expandedTaskId === task.id ? (
                       <ChevronDown className="h-3.5 w-3.5" />
@@ -635,7 +655,9 @@ export default function BrainDumpDetailPage() {
                     disabled={isPending}
                   >
                     {task.status === "DONE" && <Check className="h-3 w-3" />}
-                    {task.status === "HIDDEN" && <EyeOff className="h-2.5 w-2.5 text-muted-foreground" />}
+                    {task.status === "HIDDEN" && (
+                      <EyeOff className="text-muted-foreground h-2.5 w-2.5" />
+                    )}
                   </button>
 
                   {/* Text or Edit Input */}
@@ -652,22 +674,40 @@ export default function BrainDumpDetailPage() {
                         }}
                         disabled={isPending}
                       />
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => saveEditTask(task.id)} disabled={isPending}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => saveEditTask(task.id)}
+                        disabled={isPending}
+                      >
                         <Check className="h-3.5 w-3.5 text-green-500" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={cancelEdit} disabled={isPending}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={cancelEdit}
+                        disabled={isPending}
+                      >
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ) : (
                     <>
-                      <div className="flex flex-1 items-center gap-2 min-w-0 flex-wrap">
-                        <span className={`text-sm ${task.status === "DONE" ? "text-muted-foreground line-through" : task.status === "HIDDEN" ? "text-muted-foreground/50 italic line-through" : ""}`}>
+                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                        <span
+                          className={`text-sm ${task.status === "DONE" ? "text-muted-foreground line-through" : task.status === "HIDDEN" ? "text-muted-foreground/50 italic line-through" : ""}`}
+                        >
                           {task.text}
                         </span>
-                        {task.isPareto && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />}
+                        {task.isPareto && (
+                          <Star className="h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />
+                        )}
                         {task.priority && (
-                          <span className={`inline-flex shrink-0 items-center rounded px-1.5 py-0 text-[10px] font-bold text-white ${PRIORITY_META[task.priority].bg}`}>
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded px-1.5 py-0 text-[10px] font-bold text-white ${PRIORITY_META[task.priority].bg}`}
+                          >
                             {PRIORITY_META[task.priority].label}
                           </span>
                         )}
@@ -682,32 +722,63 @@ export default function BrainDumpDetailPage() {
                           </span>
                         )}
                         {task.estimatedValue && task.estimatedUnit && (
-                          <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground">
+                          <span className="text-muted-foreground inline-flex shrink-0 items-center gap-0.5 text-[10px]">
                             <Clock className="h-2.5 w-2.5" />
-                            {task.estimatedValue} {task.estimatedValue === 1 ? TIME_UNIT_META[task.estimatedUnit].label : TIME_UNIT_META[task.estimatedUnit].labelPlural}
+                            {task.estimatedValue}{" "}
+                            {task.estimatedValue === 1
+                              ? TIME_UNIT_META[task.estimatedUnit].label
+                              : TIME_UNIT_META[task.estimatedUnit].labelPlural}
                           </span>
                         )}
                         {task.quadrant && QUADRANT_BADGE[task.quadrant] && (
-                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[10px] font-medium ${QUADRANT_BADGE[task.quadrant].className}`}>
+                          <span
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[10px] font-medium ${QUADRANT_BADGE[task.quadrant].className}`}
+                          >
                             {QUADRANT_BADGE[task.quadrant].icon}
                           </span>
                         )}
                       </div>
                       <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                         {task.status === "HIDDEN" && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" title="Restaurar" onClick={() => setTaskStatus(task.id, "PENDING")} disabled={isPending}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            title="Restaurar"
+                            onClick={() => setTaskStatus(task.id, "PENDING")}
+                            disabled={isPending}
+                          >
                             <RotateCcw className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         {task.status !== "HIDDEN" && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" title="Ocultar" onClick={() => setTaskStatus(task.id, "HIDDEN")} disabled={isPending}>
-                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            title="Ocultar"
+                            onClick={() => setTaskStatus(task.id, "HIDDEN")}
+                            disabled={isPending}
+                          >
+                            <EyeOff className="text-muted-foreground h-3.5 w-3.5" />
                           </Button>
                         )}
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEditTask(task)} disabled={isPending}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => startEditTask(task)}
+                          disabled={isPending}
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => deleteTask(task.id)} disabled={isPending}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 h-7 w-7"
+                          onClick={() => deleteTask(task.id)}
+                          disabled={isPending}
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -771,7 +842,7 @@ export default function BrainDumpDetailPage() {
           ) : (
             <button
               onClick={() => setIsAddingTask(true)}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted/50 hover:text-foreground flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors"
             >
               <Plus className="h-4 w-4" />
               Agregar tarea
@@ -787,7 +858,7 @@ export default function BrainDumpDetailPage() {
         </Button>
         <Button
           asChild
-          className="flex-1 bg-gradient-to-r from-primary to-cyan-500 text-white shadow-md shadow-primary/20"
+          className="from-primary shadow-primary/20 flex-1 bg-gradient-to-r to-cyan-500 text-white shadow-md"
         >
           <Link href={ROUTES.NEW_DUMP}>
             <Plus className="mr-2 h-4 w-4" />
@@ -820,18 +891,19 @@ function TaskDetailPanel({
   const units: TimeUnit[] = ["MINUTES", "HOURS", "DAYS"];
 
   return (
-    <div className="mx-8 mb-2 rounded-lg border bg-muted/20 px-4 py-3 space-y-3 animate-fade-in">
+    <div className="bg-muted/20 animate-fade-in mx-8 mb-2 space-y-3 rounded-lg border px-4 py-3">
       {/* Row 1: Categoría + Prioridad */}
       <div className="grid grid-cols-2 gap-3">
         {/* Categoría */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-            <Tag className="inline h-3 w-3 mr-1" />Categoría
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            <Tag className="mr-1 inline h-3 w-3" />
+            Categoría
           </label>
           {showNewCat ? (
             <div className="flex gap-1">
               <Input
-                className="h-7 text-xs flex-1"
+                className="h-7 flex-1 text-xs"
                 placeholder="Nueva categoría..."
                 value={newCat}
                 onChange={(e) => setNewCat(e.target.value)}
@@ -845,14 +917,24 @@ function TaskDetailPanel({
                   if (e.key === "Escape") setShowNewCat(false);
                 }}
               />
-              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { onCategoryAssign(task.id, newCat); setNewCat(""); setShowNewCat(false); }} disabled={!newCat.trim()}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={() => {
+                  onCategoryAssign(task.id, newCat);
+                  setNewCat("");
+                  setShowNewCat(false);
+                }}
+                disabled={!newCat.trim()}
+              >
                 <Check className="h-3 w-3" />
               </Button>
             </div>
           ) : (
             <div className="flex gap-1">
               <select
-                className="h-7 flex-1 rounded-md border bg-background px-2 text-xs"
+                className="bg-background h-7 flex-1 rounded-md border px-2 text-xs"
                 value={task.categoryId ?? ""}
                 onChange={(e) => {
                   if (e.target.value === "__new__") {
@@ -864,7 +946,9 @@ function TaskDetailPanel({
               >
                 <option value="">Sin categoría</option>
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
                 <option value="__new__">+ Crear nueva...</option>
               </select>
@@ -874,7 +958,7 @@ function TaskDetailPanel({
 
         {/* Prioridad */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
             Prioridad
           </label>
           <div className="flex gap-1">
@@ -899,7 +983,7 @@ function TaskDetailPanel({
       <div className="grid grid-cols-2 gap-3">
         {/* ¿Cómo me siento? */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
             ¿Cómo me siento?
           </label>
           <div className="grid grid-cols-2 gap-1">
@@ -907,9 +991,9 @@ function TaskDetailPanel({
               <button
                 key={f}
                 onClick={() => onUpdate(task.id, "feeling", task.feeling === f ? null : f)}
-                className={`rounded px-2 py-1 text-[11px] transition-colors text-left ${
+                className={`rounded px-2 py-1 text-left text-[11px] transition-colors ${
                   task.feeling === f
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                    ? "bg-primary/10 text-primary ring-primary/30 ring-1"
                     : "bg-muted hover:bg-muted/80 text-muted-foreground"
                 }`}
               >
@@ -921,8 +1005,9 @@ function TaskDetailPanel({
 
         {/* ¿Cuánto tardo? */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-            <Clock className="inline h-3 w-3 mr-1" />¿Cuánto tardo?
+          <label className="text-muted-foreground mb-1 block text-[11px] font-medium">
+            <Clock className="mr-1 inline h-3 w-3" />
+            ¿Cuánto tardo?
           </label>
           <div className="flex gap-1">
             <Input
@@ -937,13 +1022,15 @@ function TaskDetailPanel({
               }}
             />
             <select
-              className="h-7 flex-1 rounded-md border bg-background px-2 text-xs"
+              className="bg-background h-7 flex-1 rounded-md border px-2 text-xs"
               value={task.estimatedUnit ?? ""}
               onChange={(e) => onUpdate(task.id, "estimatedUnit", e.target.value || null)}
             >
               <option value="">Unidad</option>
               {units.map((u) => (
-                <option key={u} value={u}>{TIME_UNIT_META[u].labelPlural}</option>
+                <option key={u} value={u}>
+                  {TIME_UNIT_META[u].labelPlural}
+                </option>
               ))}
             </select>
           </div>

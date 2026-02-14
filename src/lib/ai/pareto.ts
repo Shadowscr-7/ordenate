@@ -4,7 +4,6 @@
 // Takes classified tasks and suggests which ones are the
 // "vital few" (Pareto 80/20 principle) based on impact.
 // ============================================================
-
 import { getOpenAI } from "./openai";
 
 export interface ParetoSuggestion {
@@ -41,9 +40,7 @@ REGLAS:
 
 Responde SOLO con JSON válido, SIN markdown ni bloques de código.`;
 
-const USER_PROMPT = (
-  tasks: { text: string; quadrant: string | null }[],
-) =>
+const USER_PROMPT = (tasks: { text: string; quadrant: string | null }[]) =>
   `Analiza estas tareas y selecciona las "pocas vitales" (Principio de Pareto 80/20):
 
 ${tasks.map((t, i) => `${i + 1}. [${t.quadrant ?? "SIN CLASIFICAR"}] ${t.text}`).join("\n")}

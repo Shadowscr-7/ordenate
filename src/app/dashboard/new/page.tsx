@@ -9,8 +9,10 @@
 
 "use client";
 
-import { useState, useTransition, useRef, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+
 import { useRouter } from "next/navigation";
+
 import {
   Camera,
   Check,
@@ -26,22 +28,27 @@ import {
   Zap,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 // ─── Types ──────────────────────────────────────────────────
 
 type InputMode = "text" | "image";
 
-type ProcessingStep = "idle" | "uploading" | "ocr" | "normalizing" | "classifying" | "saving" | "done" | "error";
+type ProcessingStep =
+  | "idle"
+  | "uploading"
+  | "ocr"
+  | "normalizing"
+  | "classifying"
+  | "saving"
+  | "done"
+  | "error";
 
 const STEP_LABELS: Record<ProcessingStep, string> = {
   idle: "",
@@ -95,55 +102,45 @@ export default function NewDumpPage() {
       .catch(() => setIsPro(false));
   }, []);
 
-  const lineCount = rawText
-    .split("\n")
-    .filter((l) => l.trim().length > 0).length;
+  const lineCount = rawText.split("\n").filter((l) => l.trim().length > 0).length;
 
   // ── Image handling ──
 
-  const handleImageSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      if (file.size > 10 * 1024 * 1024) {
-        setError("La imagen no puede superar 10 MB.");
-        return;
-      }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("La imagen no puede superar 10 MB.");
+      return;
+    }
 
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-      ];
-      if (!validTypes.includes(file.type)) {
-        setError("Formato no soportado. Usa JPG, PNG, WebP o GIF.");
-        return;
-      }
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      setError("Formato no soportado. Usa JPG, PNG, WebP o GIF.");
+      return;
+    }
 
-      setError("");
-      setImageMimeType(file.type);
-      setOcrDone(false);
-      setRawText("");
+    setError("");
+    setImageMimeType(file.type);
+    setOcrDone(false);
+    setRawText("");
 
-      // Preview
-      const previewReader = new FileReader();
-      previewReader.onload = () => setImagePreview(previewReader.result as string);
-      previewReader.readAsDataURL(file);
+    // Preview
+    const previewReader = new FileReader();
+    previewReader.onload = () => setImagePreview(previewReader.result as string);
+    previewReader.readAsDataURL(file);
 
-      // Base64 for API
-      const b64Reader = new FileReader();
-      b64Reader.onload = () => {
-        const dataUrl = b64Reader.result as string;
-        // Strip data:image/...;base64, prefix
-        const base64 = dataUrl.split(",")[1];
-        setImageBase64(base64);
-      };
-      b64Reader.readAsDataURL(file);
-    },
-    [],
-  );
+    // Base64 for API
+    const b64Reader = new FileReader();
+    b64Reader.onload = () => {
+      const dataUrl = b64Reader.result as string;
+      // Strip data:image/...;base64, prefix
+      const base64 = dataUrl.split(",")[1];
+      setImageBase64(base64);
+    };
+    b64Reader.readAsDataURL(file);
+  }, []);
 
   const clearImage = useCallback(() => {
     setImagePreview(null);
@@ -234,9 +231,7 @@ export default function NewDumpPage() {
   }
 
   const isProcessing =
-    processingStep !== "idle" &&
-    processingStep !== "done" &&
-    processingStep !== "error";
+    processingStep !== "idle" && processingStep !== "done" && processingStep !== "error";
 
   // ── Render ──
 
@@ -245,13 +240,13 @@ export default function NewDumpPage() {
       {/* Header */}
       <div className="animate-fade-in">
         <h1 className="text-3xl font-bold tracking-tight">Nuevo Brain Dump</h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="text-muted-foreground mt-1">
           Escribe o sube una foto con tus ideas. La IA las organiza por ti.
         </p>
       </div>
 
       {/* Input Mode Tabs */}
-      <div className="flex gap-2 animate-fade-in">
+      <div className="animate-fade-in flex gap-2">
         <Button
           variant={inputMode === "text" ? "default" : "outline"}
           size="sm"
@@ -272,17 +267,19 @@ export default function NewDumpPage() {
         >
           <Camera className="h-4 w-4" />
           Imagen
-          {!isPro && <Lock className="h-3 w-3 text-muted-foreground" />}
+          {!isPro && <Lock className="text-muted-foreground h-3 w-3" />}
         </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in-up">
+      <form onSubmit={handleSubmit} className="animate-fade-in-up space-y-5">
         {/* Title (optional) */}
         <div className="space-y-2">
           <Label htmlFor="title">Título (opcional)</Label>
           <Input
             id="title"
-            placeholder={useAI ? "La IA sugerirá un título si lo dejas vacío" : "Ej: Tareas de la semana..."}
+            placeholder={
+              useAI ? "La IA sugerirá un título si lo dejas vacío" : "Ej: Tareas de la semana..."
+            }
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
@@ -299,32 +296,30 @@ export default function NewDumpPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/20 py-12 transition-colors hover:border-primary/40 hover:bg-muted/40"
+                className="border-muted-foreground/20 bg-muted/20 hover:border-primary/40 hover:bg-muted/40 flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-12 transition-colors"
               >
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Upload className="h-6 w-6 text-primary" />
+                <div className="bg-primary/10 rounded-full p-3">
+                  <Upload className="text-primary h-6 w-6" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium">
-                    Haz clic para subir una imagen
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-sm font-medium">Haz clic para subir una imagen</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
                     JPG, PNG, WebP o GIF — Máx 10 MB
                   </p>
                 </div>
               </button>
             ) : (
-              <div className="relative overflow-hidden rounded-xl border bg-card">
+              <div className="bg-card relative overflow-hidden rounded-xl border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="max-h-64 w-full object-contain bg-black/5"
+                  className="max-h-64 w-full bg-black/5 object-contain"
                 />
                 <div className="flex items-center justify-between border-t px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
+                    <ImageIcon className="text-muted-foreground h-4 w-4" />
+                    <span className="text-muted-foreground text-xs">
                       {ocrDone ? (
                         <span className="flex items-center gap-1 text-green-500">
                           <Check className="h-3 w-3" /> Texto extraído
@@ -381,11 +376,9 @@ export default function NewDumpPage() {
         {(inputMode === "text" || ocrDone) && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="rawText">
-                {ocrDone ? "Texto extraído (editable)" : "Tus ideas"}
-              </Label>
+              <Label htmlFor="rawText">{ocrDone ? "Texto extraído (editable)" : "Tus ideas"}</Label>
               {rawText.trim() && (
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-muted-foreground text-xs tabular-nums">
                   {lineCount} {lineCount === 1 ? "tarea" : "tareas"} detectadas
                 </span>
               )}
@@ -406,31 +399,27 @@ export default function NewDumpPage() {
         )}
 
         {/* ── AI Toggle ── */}
-        <Card className={`border transition-colors ${useAI ? "border-primary/30 bg-primary/5" : "border-muted"}`}>
+        <Card
+          className={`border transition-colors ${useAI ? "border-primary/30 bg-primary/5" : "border-muted"}`}
+        >
           <CardContent className="flex items-center gap-4 py-3">
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <Zap className={`h-4 w-4 ${useAI ? "text-primary" : "text-muted-foreground"}`} />
-                <span className="text-sm font-medium">
-                  Procesar con IA
-                </span>
+                <span className="text-sm font-medium">Procesar con IA</span>
                 {useAI && (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                  <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
                     GPT-4o mini
                   </Badge>
                 )}
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {useAI
                   ? "La IA limpiará el texto, normalizará las tareas y sugerirá clasificación Eisenhower"
                   : "Cada línea se convertirá en una tarea tal cual"}
               </p>
             </div>
-            <Switch
-              checked={useAI}
-              onCheckedChange={setUseAI}
-              disabled={isProcessing}
-            />
+            <Switch checked={useAI} onCheckedChange={setUseAI} disabled={isProcessing} />
           </CardContent>
         </Card>
 
@@ -438,11 +427,10 @@ export default function NewDumpPage() {
         {!useAI && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="flex items-start gap-3 py-3">
-              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Consejo:</span>{" "}
-                Escribe una idea por línea. Después podrás editarlas y
-                clasificarlas en el tablero Eisenhower.
+              <Lightbulb className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+              <p className="text-muted-foreground text-xs">
+                <span className="text-foreground font-medium">Consejo:</span> Escribe una idea por
+                línea. Después podrás editarlas y clasificarlas en el tablero Eisenhower.
               </p>
             </CardContent>
           </Card>
@@ -452,28 +440,21 @@ export default function NewDumpPage() {
         {isProcessing && (
           <Card className="border-primary/30 bg-primary/5 animate-fade-in">
             <CardContent className="py-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="font-medium text-sm">
-                  {STEP_LABELS[processingStep]}
-                </span>
+              <div className="mb-3 flex items-center gap-3">
+                <Loader2 className="text-primary h-5 w-5 animate-spin" />
+                <span className="text-sm font-medium">{STEP_LABELS[processingStep]}</span>
               </div>
               <div className="space-y-2">
-                {STEP_ORDER.slice(
-                  0,
-                  STEP_ORDER.indexOf(processingStep) + 1,
-                ).map((step) => (
+                {STEP_ORDER.slice(0, STEP_ORDER.indexOf(processingStep) + 1).map((step) => (
                   <div key={step} className="flex items-center gap-2 text-xs">
                     {step === processingStep ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      <Loader2 className="text-primary h-3 w-3 animate-spin" />
                     ) : (
                       <Check className="h-3 w-3 text-green-500" />
                     )}
                     <span
                       className={
-                        step === processingStep
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                        step === processingStep ? "text-foreground" : "text-muted-foreground"
                       }
                     >
                       {STEP_LABELS[step]}
@@ -487,9 +468,9 @@ export default function NewDumpPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
-            <X className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-            <p className="text-sm text-destructive">{error}</p>
+          <div className="border-destructive/30 bg-destructive/5 flex items-start gap-2 rounded-lg border px-3 py-2">
+            <X className="text-destructive mt-0.5 h-4 w-4 shrink-0" />
+            <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
 
@@ -497,12 +478,8 @@ export default function NewDumpPage() {
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={
-              isPending ||
-              !rawText.trim() ||
-              isProcessing
-            }
-            className="bg-gradient-to-r from-primary to-cyan-500 text-white shadow-md shadow-primary/20"
+            disabled={isPending || !rawText.trim() || isProcessing}
+            className="from-primary shadow-primary/20 bg-gradient-to-r to-cyan-500 text-white shadow-md"
           >
             {isPending || isProcessing ? (
               <>
@@ -511,16 +488,12 @@ export default function NewDumpPage() {
               </>
             ) : (
               <>
-                {useAI ? (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
+                {useAI ? <Sparkles className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
                 {useAI ? "Crear con IA" : "Crear Brain Dump"}
               </>
             )}
           </Button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {lineCount > 0
               ? useAI
                 ? `${lineCount} líneas → IA normalizará + clasificará`

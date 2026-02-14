@@ -1,8 +1,8 @@
 // ============================================================
 // Loading Overlay Component
 // ============================================================
-
 import { Loader2 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 interface LoadingOverlayProps {
@@ -10,18 +10,17 @@ interface LoadingOverlayProps {
   className?: string;
 }
 
-export function LoadingOverlay({ 
-  message = "Cargando...", 
-  className 
-}: LoadingOverlayProps) {
+export function LoadingOverlay({ message = "Cargando...", className }: LoadingOverlayProps) {
   return (
-    <div className={cn(
-      "fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center",
-      className
-    )}>
+    <div
+      className={cn(
+        "bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm",
+        className,
+      )}
+    >
       <div className="flex flex-col items-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">{message}</p>
       </div>
     </div>
   );
@@ -41,7 +40,7 @@ export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) 
 
   return (
     <div className="flex items-center justify-center py-8">
-      <Loader2 className={cn("animate-spin text-primary", sizes[size], className)} />
+      <Loader2 className={cn("text-primary animate-spin", sizes[size], className)} />
     </div>
   );
 }

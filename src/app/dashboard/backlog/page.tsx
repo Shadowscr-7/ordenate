@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
+
+import { ArrowRight, ListPlus, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import { toast } from "sonner";
-import { Plus, Trash2, ArrowRight, ListPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 interface BacklogTask {
   id: string;
@@ -40,7 +43,7 @@ export default function BacklogPage() {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [brainDumps, setBrainDumps] = useState<BrainDump[]>([]);
-  
+
   // Dialog states
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -71,12 +74,14 @@ export default function BacklogPage() {
       if (dumpsRes.ok) {
         const response = await dumpsRes.json();
         setBrainDumps(
-          (response.data?.dumps || []).map((d: { id: string; title: string; createdAt: string; _count?: { tasks: number } }) => ({
-            id: d.id,
-            title: d.title || "Sin título",
-            createdAt: d.createdAt,
-            taskCount: d._count?.tasks || 0,
-          }))
+          (response.data?.dumps || []).map(
+            (d: { id: string; title: string; createdAt: string; _count?: { tasks: number } }) => ({
+              id: d.id,
+              title: d.title || "Sin título",
+              createdAt: d.createdAt,
+              taskCount: d._count?.tasks || 0,
+            }),
+          ),
         );
       }
     } catch (error) {
@@ -120,7 +125,7 @@ export default function BacklogPage() {
     try {
       setActionLoading(true);
       const promises = Array.from(selectedTasks).map((id) =>
-        fetch(`/api/backlog?id=${id}`, { method: "DELETE" })
+        fetch(`/api/backlog?id=${id}`, { method: "DELETE" }),
       );
       await Promise.all(promises);
       toast.success("Tareas eliminadas");
@@ -251,7 +256,9 @@ export default function BacklogPage() {
       Q4_DELETE: "Eliminar",
     };
     return (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colors[quadrant as keyof typeof colors]}`}>
+      <span
+        className={`rounded-full border px-2 py-0.5 text-xs font-medium ${colors[quadrant as keyof typeof colors]}`}
+      >
         {labels[quadrant as keyof typeof labels]}
       </span>
     );
@@ -262,9 +269,9 @@ export default function BacklogPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
       {actionLoading && <LoadingOverlay message="Procesando tareas..." />}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Backlog</h1>
           <p className="text-muted-foreground mt-1">
@@ -274,7 +281,7 @@ export default function BacklogPage() {
       </div>
 
       {/* Add new task */}
-      <Card className="p-3 mb-6 bg-card">
+      <Card className="bg-card mb-6 p-3">
         <div className="flex gap-2">
           <Input
             placeholder="Escribe una tarea y presiona Enter..."
@@ -293,17 +300,18 @@ export default function BacklogPage() {
             disabled={creatingTask || !newTaskText.trim()}
             className="gap-1.5"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Agregar
           </Button>
         </div>
       </Card>
 
       {selectedTasks.size > 0 && (
-        <Card className="p-3 mb-4 bg-primary/5 border-primary/20">
+        <Card className="bg-primary/5 border-primary/20 mb-4 p-3">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm font-medium text-primary">
-              {selectedTasks.size} {selectedTasks.size === 1 ? "tarea seleccionada" : "tareas seleccionadas"}
+            <span className="text-primary text-sm font-medium">
+              {selectedTasks.size}{" "}
+              {selectedTasks.size === 1 ? "tarea seleccionada" : "tareas seleccionadas"}
             </span>
             <div className="flex gap-2">
               <Button
@@ -313,7 +321,7 @@ export default function BacklogPage() {
                 disabled={actionLoading}
                 className="gap-1.5"
               >
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="h-4 w-4" />
                 Mover a dump
               </Button>
               <Button
@@ -323,7 +331,7 @@ export default function BacklogPage() {
                 disabled={actionLoading}
                 className="gap-1.5"
               >
-                <ListPlus className="w-4 h-4" />
+                <ListPlus className="h-4 w-4" />
                 Crear dump
               </Button>
               <Button
@@ -333,7 +341,7 @@ export default function BacklogPage() {
                 disabled={actionLoading}
                 className="gap-1.5"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
                 Eliminar
               </Button>
             </div>
@@ -343,44 +351,46 @@ export default function BacklogPage() {
 
       {tasks.length === 0 ? (
         <Card className="p-12 text-center">
-          <div className="max-w-md mx-auto">
-            <ListPlus className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">No hay tareas en el backlog</h3>
+          <div className="mx-auto max-w-md">
+            <ListPlus className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+            <h3 className="mb-2 text-xl font-semibold">No hay tareas en el backlog</h3>
             <p className="text-muted-foreground mb-6">
               Las tareas que envíes por Telegram o agregues manualmente aparecerán aquí.
             </p>
             <Button onClick={() => router.push("/dashboard/new")}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Crear brain dump
             </Button>
           </div>
         </Card>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-1 py-2 px-1">
-            <Checkbox
-              checked={selectedTasks.size === tasks.length}
-              onCheckedChange={toggleAll}
-            />
-            <span className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  onClick={() => toggleAll()}>
+          <div className="mb-1 flex items-center gap-2 px-1 py-2">
+            <Checkbox checked={selectedTasks.size === tasks.length} onCheckedChange={toggleAll} />
+            <span
+              className="text-muted-foreground hover:text-foreground cursor-pointer text-sm font-medium transition-colors"
+              onClick={() => toggleAll()}
+            >
               Seleccionar todas
             </span>
           </div>
 
           {tasks.map((task) => (
-            <Card key={task.id} className="p-3 hover:border-primary/50 transition-all hover:shadow-sm">
+            <Card
+              key={task.id}
+              className="hover:border-primary/50 p-3 transition-all hover:shadow-sm"
+            >
               <div className="flex items-start gap-3">
                 <Checkbox
                   checked={selectedTasks.has(task.id)}
                   onCheckedChange={() => toggleTask(task.id)}
                   className="mt-0.5"
                 />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium mb-1.5 leading-snug">{task.text}</p>
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1.5 text-sm leading-snug font-medium">{task.text}</p>
+                  <div className="flex flex-wrap items-center gap-2">
                     {getQuadrantBadge(task.quadrant)}
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {new Date(task.createdAt).toLocaleDateString("es-ES", {
                         day: "numeric",
                         month: "short",
@@ -389,7 +399,7 @@ export default function BacklogPage() {
                       })}
                     </span>
                     {task.source === "TELEGRAM" && (
-                      <span className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/20">
+                      <span className="rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-xs text-purple-600 dark:text-purple-400">
                         Telegram
                       </span>
                     )}
@@ -410,11 +420,11 @@ export default function BacklogPage() {
               Selecciona el brain dump donde quieres mover las {selectedTasks.size} tareas.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="max-h-96 space-y-2 overflow-y-auto">
             {brainDumps.map((dump) => (
               <button
                 key={dump.id}
-                className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                className={`w-full rounded-lg border-2 p-3 text-left transition-all ${
                   selectedDumpId === dump.id
                     ? "border-primary bg-primary/5 shadow-sm"
                     : "border-border hover:border-primary/30 hover:bg-accent/50"
@@ -422,7 +432,7 @@ export default function BacklogPage() {
                 onClick={() => setSelectedDumpId(dump.id)}
               >
                 <div className="font-medium">{dump.title}</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-muted-foreground text-sm">
                   {dump.taskCount} tareas · {new Date(dump.createdAt).toLocaleDateString("es-ES")}
                 </div>
               </button>
@@ -467,7 +477,7 @@ export default function BacklogPage() {
               />
               <label
                 htmlFor="useAI"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Clasificar con IA (Eisenhower)
               </label>

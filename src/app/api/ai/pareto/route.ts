@@ -1,18 +1,19 @@
 // ============================================================
 // AI Pareto API — Suggest vital 20% of tasks
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { getSession } from "@/lib/auth/actions";
+
 import { suggestPareto } from "@/lib/ai";
 import {
+  apiError,
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
 import { aiLimiter, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({

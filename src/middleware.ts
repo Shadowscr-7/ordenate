@@ -1,7 +1,6 @@
 // ============================================================
 // Next.js Middleware — Auth Session Refresh + Route Protection
 // ============================================================
-
 import { type NextRequest } from "next/server";
 
 import { updateSession } from "@/lib/supabase/middleware";

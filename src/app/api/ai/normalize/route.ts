@@ -1,20 +1,21 @@
 // ============================================================
 // AI Normalize API — Convert raw text into clean task list
 // ============================================================
-
 import { NextRequest } from "next/server";
+
 import { z } from "zod";
-import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/actions";
+
 import { normalizeText } from "@/lib/ai";
-import { hasProAccess } from "@/lib/plan-gate";
 import {
+  apiError,
+  apiServerError,
   apiSuccess,
   apiUnauthorized,
   apiValidationError,
-  apiError,
-  apiServerError,
 } from "@/lib/api-response";
+import { getSession } from "@/lib/auth/actions";
+import { db } from "@/lib/db";
+import { hasProAccess } from "@/lib/plan-gate";
 import { aiLimiter, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
