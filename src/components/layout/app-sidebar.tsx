@@ -36,14 +36,14 @@ const NAV_ITEMS = [
     icon: Home,
   },
   {
-    label: "Brain Dumps",
-    href: ROUTES.DUMPS,
-    icon: Brain,
-  },
-  {
     label: "Backlog",
     href: ROUTES.BACKLOG,
     icon: ListTodo,
+  },
+  {
+    label: "Brain Dumps",
+    href: ROUTES.DUMPS,
+    icon: Brain,
   },
   {
     label: "Tablero Eisenhower",
