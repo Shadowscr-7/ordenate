@@ -259,24 +259,29 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 4 — Vista Pareto + Google Calendar
+## FASE 4 — Vista Pareto + dueDate ✅ COMPLETADA
 
-**Objetivo:** Identificar el 20% clave y agendar tareas.
+**Objetivo:** Identificar el 20% clave y asignar fechas límite.
 
-- [ ] Algoritmo de selección Pareto:
-  - Ordenar tareas de Q1+Q2 por impacto/urgencia
-  - Marcar top 20% como "Pareto"
-- [ ] Vista "Foco Pareto": solo muestra tareas marcadas
-- [ ] Toggle manual de flag Pareto en cada tarea
-- [ ] Integración Google Calendar:
-  - OAuth2 con Google
-  - API Route: `POST /api/calendar/schedule`
-  - Crear evento en Google Calendar desde una tarea
-- [ ] Campo de fecha/hora en TaskLine
-- [ ] Sincronización bidireccional (opcional, fase posterior)
-- [ ] UI: badge "Pareto" en tarjetas, vista filtrada
+- [x] Algoritmo de selección Pareto con IA:
+  - `src/lib/ai/pareto.ts` — GPT-4o-mini identifica tareas vitales (max 20-30%)
+  - Evalúa impacto, urgencia y alineación con Q1+Q2
+  - Devuelve `impactScore` y `reason` por tarea
+- [x] API Routes:
+  - `GET /api/pareto` — Obtiene todas las tareas ordenadas por isPareto desc
+  - `POST /api/ai/pareto` — Análisis IA de Pareto (sugiere cuáles marcar)
+- [x] Vista "Foco Pareto" (`/dashboard/pareto`):
+  - Lista prominente de tareas Pareto (las pocas vitales)
+  - Sección colapsable con el resto de tareas
+  - Estadísticas: activas, completadas, % del total
+  - Botón "Analizar con IA" para sugerencias automáticas
+- [x] Toggle manual de flag Pareto en cada tarea (⭐ en todas las vistas)
+- [x] Campo dueDate con date picker nativo en vista Pareto
+- [x] Badge Pareto (⭐) en Eisenhower board y dump detail
+- [x] Marcar tareas como completadas desde vista Pareto
+- [x] Ocultar/mostrar tareas completadas
 
-**Entregable:** Vista Pareto funcional + tareas agendables en Google Calendar.
+**Entregable:** Vista Pareto funcional con IA + fechas límite + badges en todas las vistas.
 
 ---
 

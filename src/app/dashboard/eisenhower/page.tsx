@@ -38,6 +38,7 @@ import {
   Inbox,
   Loader2,
   Pencil,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -64,6 +65,7 @@ interface TaskItem {
   sortOrder: number;
   status: string;
   quadrant: EisenhowerQuadrant | null;
+  isPareto: boolean;
   brainDump: { id: string; title: string | null };
 }
 
@@ -198,6 +200,11 @@ function SortableTaskCard({
       >
         {task.status === "DONE" && <Check className="h-2.5 w-2.5" />}
       </button>
+
+      {/* Pareto star */}
+      {task.isPareto && (
+        <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />
+      )}
 
       {/* Text */}
       <div className="min-w-0 flex-1">

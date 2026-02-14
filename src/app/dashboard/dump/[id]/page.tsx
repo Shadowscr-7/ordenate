@@ -22,6 +22,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Star,
   Target,
   Trash2,
   X,
@@ -45,6 +46,7 @@ interface Task {
   sortOrder: number;
   status: string;
   quadrant: string | null;
+  isPareto: boolean;
 }
 
 interface BrainDump {
@@ -534,6 +536,9 @@ export default function BrainDumpDetailPage() {
                       >
                         {task.text}
                       </span>
+                      {task.isPareto && (
+                        <Star className="h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />
+                      )}
                       {task.quadrant && QUADRANT_BADGE[task.quadrant] && (
                         <span
                           className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[10px] font-medium ${QUADRANT_BADGE[task.quadrant].className}`}
