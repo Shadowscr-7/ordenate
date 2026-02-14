@@ -11,14 +11,18 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Use direct connection in development for better reliability
+const databaseUrl = process.env.NODE_ENV === "development" 
+  ? process.env.DIRECT_URL 
+  : process.env.DATABASE_URL;
+
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-    // Connection pooling optimization
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: databaseUrl,
       },
     },
   });
