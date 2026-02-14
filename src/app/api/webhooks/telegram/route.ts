@@ -1,10 +1,12 @@
 // ============================================================
 // Telegram Webhook — Receives messages from Telegram Bot API
 // ============================================================
-// Handles:
-//   /start OD-XXXX → Links Telegram account to user
-//   Text messages  → Creates a new BrainDump
-//   Photo messages → Creates a BrainDump with image reference
+// Flow:
+//   /start OD-XXXX  → Links Telegram account to user
+//   /cancelar       → Cancels pending brain dump
+//   Text message     → Two-step: (1) save pending + ask title,
+//                                (2) receive title + create dump
+//   Photo messages   → Creates a BrainDump with image reference
 // ============================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -42,7 +44,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // ─── Regular text message → Create BrainDump ─────────────
+    // ─── /cancelar → Cancel pending dump ─────────────────────
+    if (text === "/cancelar") {
+      await handleCancel(chatId);
+      return NextResponse.json({ ok: true });
+    }
+
+    // ─── Regular text message → Two-step brain dump flow ─────
     if (text && !text.startsWith("/")) {
       await handleTextMessage(chatId, text);
       return NextResponse.json({ ok: true });
@@ -51,7 +59,6 @@ export async function POST(request: NextRequest) {
     // ─── Photo message → Create BrainDump with image ─────────
     if (message.photo && message.photo.length > 0) {
       const caption = message.caption ?? "";
-      // Use the largest photo (last in array)
       const largestPhoto = message.photo[message.photo.length - 1];
       await handlePhotoMessage(chatId, largestPhoto.file_id, caption);
       return NextResponse.json({ ok: true });
@@ -164,35 +171,92 @@ async function handleTextMessage(chatId: number, text: string) {
     return;
   }
 
-  // Create the brain dump with parsed tasks
+  // ── Step 2: User has pending text → this message is the TITLE ──
+  if (user.telegramPendingText) {
+    const pendingText = user.telegramPendingText;
+    const title = text.trim();
+
+    // Parse the pending text into task lines
+    const lines = pendingText
+      .split(/\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    // Create the brain dump with title + pending tasks
+    await db.brainDump.create({
+      data: {
+        title,
+        rawText: pendingText,
+        source: "TELEGRAM",
+        status: "PROCESSED",
+        workspaceId: workspace.id,
+        tasks: {
+          create: lines.map((line, index) => ({
+            text: line,
+            sortOrder: index,
+            status: "PENDING",
+          })),
+        },
+      },
+    });
+
+    // Clear the pending text
+    await db.user.update({
+      where: { id: user.id },
+      data: { telegramPendingText: null },
+    });
+
+    await sendMessage(
+      chatId,
+      `✅ <b>Brain dump creado</b>\n\n` +
+        `📋 <b>${title}</b>\n` +
+        `Se crearon <b>${lines.length}</b> ${lines.length === 1 ? "tarea" : "tareas"}.\n\n` +
+        `Abre la app para clasificarlas con la Matriz Eisenhower. 🎯`,
+    );
+    return;
+  }
+
+  // ── Step 1: No pending text → save text and ask for title ──
+  await db.user.update({
+    where: { id: user.id },
+    data: { telegramPendingText: text },
+  });
+
   const lines = text
     .split(/\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
-  const dump = await db.brainDump.create({
-    data: {
-      rawText: text,
-      source: "TELEGRAM",
-      status: "PROCESSED",
-      workspaceId: workspace.id,
-      tasks: {
-        create: lines.map((line, index) => ({
-          text: line,
-          sortOrder: index,
-          status: "PENDING",
-        })),
-      },
-    },
-  });
-
   await sendMessage(
     chatId,
-    `✅ <b>Brain dump creado</b>\n\n` +
-      `📝 "${text.length > 100 ? text.slice(0, 100) + "..." : text}"\n\n` +
-      `Se crearon <b>${lines.length}</b> ${lines.length === 1 ? "tarea" : "tareas"}.\n` +
-      `Abre la app para clasificarlas con la Matriz Eisenhower y Pareto. 🎯`,
+    `📝 <b>Recibí ${lines.length} ${lines.length === 1 ? "tarea" : "tareas"}</b>\n\n` +
+      `Ahora envíame un <b>título o contexto</b> para este brain dump.\n` +
+      `Ejemplo: <i>"Tareas de la semana"</i>, <i>"Ideas para el proyecto"</i>\n\n` +
+      `O envía /cancelar para descartarlo.`,
   );
+}
+
+async function handleCancel(chatId: number) {
+  const user = await db.user.findUnique({
+    where: { telegramChatId: String(chatId) },
+  });
+
+  if (!user) {
+    await sendMessage(chatId, `🔗 Tu cuenta no está vinculada.`);
+    return;
+  }
+
+  if (!user.telegramPendingText) {
+    await sendMessage(chatId, `ℹ️ No hay ningún brain dump pendiente para cancelar.`);
+    return;
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: { telegramPendingText: null },
+  });
+
+  await sendMessage(chatId, `🗑️ Brain dump descartado. Puedes enviarme otro cuando quieras.`);
 }
 
 async function handlePhotoMessage(

@@ -25,6 +25,7 @@ model User {
   authId         String   @unique @map("auth_id") // Supabase Auth UID
   telegramChatId String?  @unique @map("telegram_chat_id")
   telegramLinkedAt DateTime? @map("telegram_linked_at")
+  telegramPendingText String? @map("telegram_pending_text") @db.Text
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
