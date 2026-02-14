@@ -31,6 +31,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Clock,
   Eye,
   EyeOff,
   Filter,
@@ -38,8 +39,10 @@ import {
   Inbox,
   Loader2,
   Pencil,
+  Sparkles,
   Star,
   Trash2,
+  User,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -55,7 +58,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ROUTES } from "@/lib/constants";
-import { type EisenhowerQuadrant, QUADRANT_META } from "@/types";
+import {
+  type EisenhowerQuadrant,
+  QUADRANT_META,
+  PRIORITY_META,
+  FEELING_META,
+  TASK_STATUS_META,
+  type TaskPriority,
+  type TaskFeeling,
+  type TaskStatus as TaskStatusType,
+} from "@/types";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -66,6 +78,14 @@ interface TaskItem {
   status: string;
   quadrant: EisenhowerQuadrant | null;
   isPareto: boolean;
+  priority: TaskPriority | null;
+  feeling: TaskFeeling | null;
+  estimatedValue: number | null;
+  estimatedUnit: string | null;
+  responsible: string | null;
+  leaderDecision: string | null;
+  dueDate: string | null;
+  category: { id: string; name: string } | null;
   brainDump: { id: string; title: string | null };
 }
 
@@ -82,32 +102,32 @@ const COLUMNS: { id: ColumnId; label: string; description: string; color: string
   },
   {
     id: "Q1_DO",
-    label: "🔴 Hacer",
-    description: "Urgente + Importante",
+    label: "🔴 Urgente e Importante",
+    description: "Acción inmediata requerida",
     color: "text-red-500",
     bg: "bg-red-500/5",
     border: "border-red-500/20",
   },
   {
     id: "Q2_SCHEDULE",
-    label: "🔵 Planificar",
-    description: "Importante, no urgente",
+    label: "🔵 No urgente pero importante",
+    description: "Planificar para después",
     color: "text-blue-500",
     bg: "bg-blue-500/5",
     border: "border-blue-500/20",
   },
   {
     id: "Q3_DELEGATE",
-    label: "🟡 Delegar",
-    description: "Urgente, no importante",
+    label: "🟡 Urgente pero no importante",
+    description: "Delegar si es posible",
     color: "text-yellow-500",
     bg: "bg-yellow-500/5",
     border: "border-yellow-500/20",
   },
   {
     id: "Q4_DELETE",
-    label: "⚪ Eliminar",
-    description: "Ni urgente ni importante",
+    label: "⚪ No es urgente ni importante",
+    description: "Considerar eliminar",
     color: "text-neutral-400",
     bg: "bg-neutral-500/5",
     border: "border-neutral-500/20",
@@ -145,6 +165,7 @@ function SortableTaskCard({
   onToggleDone,
   onDelete,
   onEdit,
+  onUpdateField,
   isPending,
   showDump,
 }: {
@@ -152,9 +173,11 @@ function SortableTaskCard({
   onToggleDone: (task: TaskItem) => void;
   onDelete: (id: string) => void;
   onEdit: (task: TaskItem) => void;
+  onUpdateField: (taskId: string, field: string, value: unknown) => void;
   isPending: boolean;
   showDump: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const {
     attributes,
     listeners,
@@ -169,76 +192,166 @@ function SortableTaskCard({
     transition,
   };
 
+  const statusOptions: TaskStatusType[] = ["PENDING", "IN_PROGRESS", "DONE"];
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-start gap-2 rounded-lg border bg-card px-3 py-2 transition-all ${
+      className={`rounded-lg border bg-card transition-all ${
         isDragging
           ? "scale-[1.02] opacity-50 shadow-lg ring-2 ring-primary/30"
           : "hover:shadow-sm hover:border-primary/15"
       } ${task.status === "DONE" ? "opacity-60" : ""}`}
     >
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground/30 transition-colors hover:text-muted-foreground active:cursor-grabbing"
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
+      <div className="group flex items-start gap-2 px-3 py-2">
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground/30 transition-colors hover:text-muted-foreground active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
 
-      {/* Done toggle */}
-      <button
-        onClick={() => onToggleDone(task)}
-        disabled={isPending}
-        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
-          task.status === "DONE"
-            ? "border-green-500 bg-green-500 text-white"
-            : "border-muted-foreground/30 hover:border-primary"
-        }`}
-      >
-        {task.status === "DONE" && <Check className="h-2.5 w-2.5" />}
-      </button>
-
-      {/* Pareto star */}
-      {task.isPareto && (
-        <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />
-      )}
-
-      {/* Text */}
-      <div className="min-w-0 flex-1">
-        <p
-          className={`text-[13px] leading-snug ${
-            task.status === "DONE" ? "text-muted-foreground line-through" : ""
+        {/* Done toggle */}
+        <button
+          onClick={() => onToggleDone(task)}
+          disabled={isPending}
+          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
+            task.status === "DONE"
+              ? "border-green-500 bg-green-500 text-white"
+              : "border-muted-foreground/30 hover:border-primary"
           }`}
         >
-          {task.text}
-        </p>
-        {showDump && task.brainDump.title && (
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">
-            {task.brainDump.title}
-          </p>
+          {task.status === "DONE" && <Check className="h-2.5 w-2.5" />}
+        </button>
+
+        {/* Pareto star */}
+        {task.isPareto && (
+          <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-500" />
         )}
+
+        {/* Text + badges */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className={`text-[13px] leading-snug ${task.status === "DONE" ? "text-muted-foreground line-through" : ""}`}>
+              {task.text}
+            </p>
+            {task.priority && (
+              <span className={`inline-flex shrink-0 rounded px-1 py-0 text-[9px] font-bold text-white ${PRIORITY_META[task.priority].bg}`}>
+                {PRIORITY_META[task.priority].label}
+              </span>
+            )}
+            {task.feeling && (
+              <span className="text-[10px]" title={FEELING_META[task.feeling].label}>
+                {FEELING_META[task.feeling].emoji}
+              </span>
+            )}
+            {task.category && (
+              <span className="text-[10px] text-purple-500">📁 {task.category.name}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {showDump && task.brainDump.title && (
+              <p className="truncate text-[11px] text-muted-foreground/60">{task.brainDump.title}</p>
+            )}
+            {task.responsible && (
+              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <User className="h-2.5 w-2.5" /> {task.responsible}
+              </span>
+            )}
+            {task.dueDate && (
+              <span className={`flex items-center gap-0.5 text-[10px] ${new Date(task.dueDate) < new Date() && task.status !== "DONE" ? "text-red-500 font-medium" : "text-muted-foreground/60"}`}>
+                <Clock className="h-2.5 w-2.5" />
+                {new Date(task.dueDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button onClick={() => setExpanded(!expanded)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </button>
+          <button onClick={() => onEdit(task)} disabled={isPending} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Pencil className="h-3 w-3" />
+          </button>
+          <button onClick={() => onDelete(task.id)} disabled={isPending} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <button
-          onClick={() => onEdit(task)}
-          disabled={isPending}
-          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <Pencil className="h-3 w-3" />
-        </button>
-        <button
-          onClick={() => onDelete(task.id)}
-          disabled={isPending}
-          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
-      </div>
+      {/* Expanded detail panel */}
+      {expanded && (
+        <div className="border-t px-3 py-2 space-y-2 bg-muted/10 animate-fade-in">
+          {/* Estado + Responsable */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground block mb-0.5">Estado</label>
+              <select
+                className="h-6 w-full rounded border bg-background px-1.5 text-[11px]"
+                value={task.status}
+                onChange={(e) => onUpdateField(task.id, "status", e.target.value)}
+                disabled={isPending}
+              >
+                {statusOptions.map((s) => (
+                  <option key={s} value={s}>{TASK_STATUS_META[s].label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground block mb-0.5">Responsable</label>
+              <Input
+                className="h-6 text-[11px]"
+                placeholder="Asignar persona..."
+                defaultValue={task.responsible ?? ""}
+                onBlur={(e) => onUpdateField(task.id, "responsible", e.target.value || null)}
+                disabled={isPending}
+              />
+            </div>
+          </div>
+          {/* Pareto + Vencimiento */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground block mb-0.5">Pareto 20%</label>
+              <button
+                onClick={() => onUpdateField(task.id, "isPareto", !task.isPareto)}
+                disabled={isPending}
+                className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] transition-colors ${
+                  task.isPareto ? "bg-amber-500/20 text-amber-600" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <Star className={`h-3 w-3 ${task.isPareto ? "fill-amber-500" : ""}`} />
+                {task.isPareto ? "Sí — Vital" : "No"}
+              </button>
+            </div>
+            <div>
+              <label className="text-[10px] font-medium text-muted-foreground block mb-0.5">Vencimiento</label>
+              <Input
+                type="date"
+                className="h-6 text-[11px]"
+                defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""}
+                onChange={(e) => onUpdateField(task.id, "dueDate", e.target.value ? new Date(e.target.value).toISOString() : null)}
+                disabled={isPending}
+              />
+            </div>
+          </div>
+          {/* Decisión del Líder */}
+          <div>
+            <label className="text-[10px] font-medium text-muted-foreground block mb-0.5">Decisión del Líder</label>
+            <Input
+              className="h-6 text-[11px]"
+              placeholder="Escribir decisión..."
+              defaultValue={task.leaderDecision ?? ""}
+              onBlur={(e) => onUpdateField(task.id, "leaderDecision", e.target.value || null)}
+              disabled={isPending}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -271,6 +384,7 @@ function DroppableColumn({
   onToggleDone,
   onDelete,
   onEdit,
+  onUpdateField,
   isPending,
   showDump,
   hideDone,
@@ -280,6 +394,7 @@ function DroppableColumn({
   onToggleDone: (task: TaskItem) => void;
   onDelete: (id: string) => void;
   onEdit: (task: TaskItem) => void;
+  onUpdateField: (taskId: string, field: string, value: unknown) => void;
   isPending: boolean;
   showDump: boolean;
   hideDone: boolean;
@@ -337,6 +452,7 @@ function DroppableColumn({
                 onToggleDone={onToggleDone}
                 onDelete={onDelete}
                 onEdit={onEdit}
+                onUpdateField={onUpdateField}
                 isPending={isPending}
                 showDump={showDump}
               />
@@ -359,6 +475,7 @@ export default function EisenhowerPage() {
   const [inboxCollapsed, setInboxCollapsed] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [editText, setEditText] = useState("");
+  const [classifying, setClassifying] = useState(false);
   const [isPending, startTransition] = useTransition();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -550,6 +667,71 @@ export default function EisenhowerPage() {
     });
   }
 
+  function updateField(taskId: string, field: string, value: unknown) {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, [field]: value } : t)),
+    );
+    startTransition(async () => {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+    });
+  }
+
+  async function classifyWithAI() {
+    const inbox = tasks.filter((t) => !t.quadrant);
+    if (inbox.length === 0) return;
+    setClassifying(true);
+    try {
+      const payload = inbox.map((t) => ({
+        text: t.text,
+        priority: t.priority ?? undefined,
+        feeling: t.feeling ?? undefined,
+        estimatedValue: t.estimatedValue ?? undefined,
+        estimatedUnit: t.estimatedUnit ?? undefined,
+        category: t.category?.name ?? undefined,
+      }));
+      const res = await fetch("/api/ai/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: payload }),
+      });
+      if (!res.ok) throw new Error();
+      const { data } = await res.json();
+      const results = data.results as { quadrant: EisenhowerQuadrant }[];
+      const updates: { id: string; quadrant: EisenhowerQuadrant }[] = [];
+      inbox.forEach((t, i) => {
+        if (results[i]?.quadrant) {
+          updates.push({ id: t.id, quadrant: results[i].quadrant });
+        }
+      });
+      if (updates.length > 0) {
+        setTasks((prev) =>
+          prev.map((t) => {
+            const u = updates.find((u) => u.id === t.id);
+            return u ? { ...t, quadrant: u.quadrant } : t;
+          }),
+        );
+        // Persist each
+        await Promise.all(
+          updates.map((u) =>
+            fetch(`/api/tasks/${u.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ quadrant: u.quadrant }),
+            }),
+          ),
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setClassifying(false);
+    }
+  }
+
   // ── Render ──
 
   if (loading) {
@@ -610,6 +792,21 @@ export default function EisenhowerPage() {
                 {showDump ? "Ocultar origen" : "Mostrar origen"}
               </TooltipContent>
             </Tooltip>
+            {tasks.filter((t) => !t.quadrant).length > 0 && (
+              <Button
+                size="sm"
+                className="h-7 gap-1.5 text-xs bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-md"
+                onClick={classifyWithAI}
+                disabled={classifying}
+              >
+                {classifying ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                Clasificar con IA
+              </Button>
+            )}
           </div>
         </div>
 
@@ -678,6 +875,7 @@ export default function EisenhowerPage() {
                   onToggleDone={toggleDone}
                   onDelete={deleteTask}
                   onEdit={startEdit}
+                  onUpdateField={updateField}
                   isPending={isPending}
                   showDump={showDump}
                   hideDone={hideDone}
@@ -696,6 +894,7 @@ export default function EisenhowerPage() {
                 onToggleDone={toggleDone}
                 onDelete={deleteTask}
                 onEdit={startEdit}
+                onUpdateField={updateField}
                 isPending={isPending}
                 showDump={showDump}
                 hideDone={hideDone}

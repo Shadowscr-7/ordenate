@@ -285,6 +285,49 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
+## FASE 4.5 — Atributos Enriquecidos de Tareas + Eisenhower Rediseñado ✅ COMPLETADA
+
+**Objetivo:** Enriquecer cada tarea con categoría, prioridad, sentimiento y tiempo estimado. Rediseñar el tablero Eisenhower con campos expandidos y clasificación IA.
+
+### Backend
+- [x] Prisma schema ampliado:
+  - Modelo `Category` (id, name, workspaceId, `@@unique([workspaceId, name])`)
+  - Task: campos `priority` (ALTA/MEDIA/BAJA), `feeling` (MUST_DO/WANT_TO/DONT_CARE/LAZY), `estimatedValue`+`estimatedUnit` (MINUTES/HOURS/DAYS), `responsible`, `leaderDecision`, `categoryId` FK
+  - Nuevos enums: `TaskPriority`, `TaskFeeling`, `TimeUnit`
+- [x] API `GET/POST /api/categories` — listar + crear/upsert categorías
+- [x] Validaciones (`updateTaskSchema`) ampliadas con 7 campos opcionales
+- [x] Task PATCH API procesa todos los nuevos campos
+- [x] Eisenhower API incluye `category` en relación de tareas
+
+### IA
+- [x] Prompt de clasificación enriquecido: considera prioridad, sentimiento, tiempo y categoría
+- [x] `classifyTasks()` acepta `string[] | ClassifyInput[]` (retrocompatible)
+- [x] API classify acepta ambos formatos (union schema)
+
+### Vista Brain Dump Detail
+- [x] Filas de tareas expandibles con panel detallado (`TaskDetailPanel`)
+- [x] Combo de categoría con opción de crear nueva
+- [x] Botones toggle para Prioridad (ALTA/MEDIA/BAJA con colores)
+- [x] Botones toggle para Sentimiento (😤/😊/😐/😴)
+- [x] Input de tiempo estimado (valor + unidad)
+- [x] Badges en cada fila: prioridad, categoría, sentimiento, cuadrante
+- [x] Clasificación IA envía datos enriquecidos
+
+### Vista Eisenhower Rediseñada
+- [x] Cuadrantes renombrados: "Urgente e Importante", "No urgente pero importante", "Urgente pero no importante", "No es urgente ni importante"
+- [x] Tarjetas expandibles con detalle: Estado (Pendiente/En Curso/Finalizado), Responsable, Pareto 20%, Vencimiento, Decisión del Líder
+- [x] Badges inline: prioridad, sentimiento, categoría, responsable, vencimiento
+- [x] Botón "Clasificar con IA" en la cabecera (clasifica tareas sin cuadrante)
+- [x] Nombre de tarea solo-lectura en Eisenhower (editable solo en brain dump)
+
+### Tipos y Constantes
+- [x] `PRIORITY_META`, `FEELING_META`, `TIME_UNIT_META`, `TASK_STATUS_META`
+- [x] `QUADRANT_META` labels actualizados
+
+**Entregable:** Tareas con atributos ricos, panel expandible en ambas vistas, clasificación IA enriquecida.
+
+---
+
 ## FASE 5 — Stripe Billing
 
 **Objetivo:** Sistema de suscripciones con pagos recurrentes.
@@ -367,6 +410,8 @@ FASE 2  ━━━━━━━━━━━━━━━━━━━━━━━  T
 FASE 3  ━━━━━━━━━━━━━━━━━━━━━━━  IA (OCR + LLM)
    ↓
 FASE 4  ━━━━━━━━━━━━━━━━━━━━━━━  Pareto + Calendar
+   ↓
+FASE 4.5━━━━━━━━━━━━━━━━━━━━━━━  Atributos Enriquecidos + Eisenhower v2
    ↓
 FASE 5  ━━━━━━━━━━━━━━━━━━━━━━━  Stripe Billing
    ↓

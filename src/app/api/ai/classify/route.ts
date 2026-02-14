@@ -14,11 +14,24 @@ import {
   apiServerError,
 } from "@/lib/api-response";
 
+const classifyInputSchema = z.object({
+  text: z.string().min(1).max(1000),
+  priority: z.string().nullable().optional(),
+  feeling: z.string().nullable().optional(),
+  estimatedValue: z.number().nullable().optional(),
+  estimatedUnit: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+});
+
 const schema = z.object({
   tasks: z
-    .array(z.string().min(1).max(1000))
-    .min(1, "Se requiere al menos una tarea")
-    .max(100, "Máximo 100 tareas por request"),
+    .union([
+      z.array(z.string().min(1).max(1000)),
+      z.array(classifyInputSchema),
+    ])
+    .refine((arr) => arr.length >= 1 && arr.length <= 100, {
+      message: "Se requiere entre 1 y 100 tareas",
+    }),
 });
 
 export async function POST(request: NextRequest) {

@@ -37,6 +37,13 @@ export const updateTaskSchema = z.object({
   status: z.enum(["PENDING", "IN_PROGRESS", "DONE", "HIDDEN"]).optional(),
   sortOrder: z.number().int().min(0).optional(),
   dueDate: z.string().datetime().optional().nullable(),
+  priority: z.enum(["ALTA", "MEDIA", "BAJA"]).nullable().optional(),
+  feeling: z.enum(["MUST_DO", "WANT_TO", "DONT_CARE", "LAZY"]).nullable().optional(),
+  estimatedValue: z.number().int().min(1).nullable().optional(),
+  estimatedUnit: z.enum(["MINUTES", "HOURS", "DAYS"]).nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  responsible: z.string().max(150).nullable().optional(),
+  leaderDecision: z.string().max(500).nullable().optional(),
 });
 
 export const reorderTasksSchema = z.object({

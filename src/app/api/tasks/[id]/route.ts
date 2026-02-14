@@ -65,6 +65,13 @@ export async function PATCH(
     }
     if (parsed.data.sortOrder !== undefined) updateData.sortOrder = parsed.data.sortOrder;
     if (parsed.data.dueDate !== undefined) updateData.dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
+    if (parsed.data.priority !== undefined) updateData.priority = parsed.data.priority;
+    if (parsed.data.feeling !== undefined) updateData.feeling = parsed.data.feeling;
+    if (parsed.data.estimatedValue !== undefined) updateData.estimatedValue = parsed.data.estimatedValue;
+    if (parsed.data.estimatedUnit !== undefined) updateData.estimatedUnit = parsed.data.estimatedUnit;
+    if (parsed.data.categoryId !== undefined) updateData.categoryId = parsed.data.categoryId;
+    if (parsed.data.responsible !== undefined) updateData.responsible = parsed.data.responsible;
+    if (parsed.data.leaderDecision !== undefined) updateData.leaderDecision = parsed.data.leaderDecision;
 
     const updated = await db.task.update({
       where: { id },

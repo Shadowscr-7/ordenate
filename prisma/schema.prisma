@@ -46,6 +46,7 @@ model Workspace {
   // Relations
   members      WorkspaceMember[]
   brainDumps   BrainDump[]
+  categories   Category[]
   subscription Subscription?
   auditLogs    AuditLog[]
 
@@ -144,34 +145,58 @@ enum BrainDumpStatus {
   ARCHIVED
 }
 
+// ─── CATEGORIES ─────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @db.VarChar(100)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@unique([workspaceId, name])
+  @@map("categories")
+}
+
 // ─── TASKS (Lines) ──────────────────────────────────────────
 
 model Task {
-  id          String          @id @default(cuid())
-  text        String          @db.Text
-  sortOrder   Int             @default(0) @map("sort_order")
-  quadrant    EisenhowerQuad?
-  isPareto    Boolean         @default(false) @map("is_pareto")
-  status      TaskStatus      @default(PENDING)
-  dueDate     DateTime?       @map("due_date")
-  calendarId  String?         @map("calendar_event_id")
-  completedAt DateTime?       @map("completed_at")
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
+  id               String          @id @default(cuid())
+  text             String          @db.Text
+  sortOrder        Int             @default(0) @map("sort_order")
+  quadrant         EisenhowerQuad?
+  isPareto         Boolean         @default(false) @map("is_pareto")
+  status           TaskStatus      @default(PENDING)
+  priority         TaskPriority?
+  feeling          TaskFeeling?
+  estimatedValue   Int?            @map("estimated_value")
+  estimatedUnit    TimeUnit?       @map("estimated_unit")
+  responsible      String?         @db.VarChar(150)
+  leaderDecision   String?         @map("leader_decision") @db.Text
+  dueDate          DateTime?       @map("due_date")
+  calendarId       String?         @map("calendar_event_id")
+  completedAt      DateTime?       @map("completed_at")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
 
   // Relations
   brainDumpId String    @map("brain_dump_id")
   brainDump   BrainDump @relation(fields: [brainDumpId], references: [id], onDelete: Cascade)
+  categoryId  String?   @map("category_id")
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([brainDumpId, sortOrder])
   @@map("tasks")
 }
 
 enum EisenhowerQuad {
-  Q1_DO       // Urgent + Important
-  Q2_SCHEDULE // Not Urgent + Important
-  Q3_DELEGATE // Urgent + Not Important
-  Q4_DELETE   // Not Urgent + Not Important
+  Q1_DO       // Urgente e Importante
+  Q2_SCHEDULE // No Urgente pero Importante
+  Q3_DELEGATE // Urgente pero No Importante
+  Q4_DELETE   // No es Urgente ni Importante
 }
 
 enum TaskStatus {
@@ -179,6 +204,25 @@ enum TaskStatus {
   IN_PROGRESS
   DONE
   HIDDEN
+}
+
+enum TaskPriority {
+  ALTA
+  MEDIA
+  BAJA
+}
+
+enum TaskFeeling {
+  MUST_DO    // Lo tengo que hacer sí o sí
+  WANT_TO    // Quiero hacerlo
+  DONT_CARE  // Me da igual
+  LAZY       // Me da fiaca
+}
+
+enum TimeUnit {
+  MINUTES
+  HOURS
+  DAYS
 }
 
 // ─── AUDIT LOG ──────────────────────────────────────────────

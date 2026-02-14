@@ -38,7 +38,10 @@ export async function GET(
     const brainDump = await db.brainDump.findFirst({
       where: { id, workspaceId },
       include: {
-        tasks: { orderBy: { sortOrder: "asc" } },
+        tasks: {
+          orderBy: { sortOrder: "asc" },
+          include: { category: true },
+        },
       },
     });
 
@@ -76,7 +79,10 @@ export async function PATCH(
         ...(body.status !== undefined && { status: body.status }),
       },
       include: {
-        tasks: { orderBy: { sortOrder: "asc" } },
+        tasks: {
+          orderBy: { sortOrder: "asc" },
+          include: { category: true },
+        },
       },
     });
 

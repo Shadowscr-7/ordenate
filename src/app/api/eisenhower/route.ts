@@ -34,6 +34,7 @@ export async function GET(_request: NextRequest) {
         brainDump: {
           select: { id: true, title: true },
         },
+        category: { select: { id: true, name: true } },
       },
     });
 
