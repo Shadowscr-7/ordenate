@@ -16,6 +16,7 @@ export const ROUTES = {
   DASHBOARD: "/dashboard",
   NEW_DUMP: "/dashboard/new",
   BRAIN_DUMP: (id: string) => `/dashboard/dump/${id}` as const,
+  DUMPS: "/dashboard/dumps",
   BACKLOG: "/dashboard/backlog",
   EISENHOWER: "/dashboard/eisenhower",
   PARETO: "/dashboard/pareto",
