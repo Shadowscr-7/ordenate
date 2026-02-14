@@ -19,9 +19,13 @@ import {
 } from "@/lib/api-response";
 import { normalizeText, classifyTasks } from "@/lib/ai";
 import { canCreateDump } from "@/lib/plan-gate";
+import { apiLimiter, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const { ok } = apiLimiter.check(getClientIp(request));
+    if (!ok) return apiError("Demasiadas solicitudes. Intenta en un momento.", 429);
+
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
 

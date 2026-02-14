@@ -403,28 +403,26 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 7 — UX Polish + Lanzamiento
+## FASE 7 — UX Polish + Lanzamiento ✅ COMPLETADA
 
 **Objetivo:** Pulir la experiencia y preparar para producción.
 
-- [ ] Animaciones con Framer Motion (transiciones de página, modals, drag)
-- [ ] Atajos de teclado:
-  - `Cmd+K` → command palette
+- [x] Animaciones con Framer Motion (transiciones de página, modals, drag)
+- [x] Atajos de teclado:
+  - `Cmd+K` → command palette (cmdk)
   - `N` → nuevo dump
-  - `1-4` → mover tarea a cuadrante
-  - `D` → marcar como done
-- [ ] Dark mode / Light mode toggle
-- [ ] Responsive completo (mobile-first)
-- [ ] Loading skeletons en todas las páginas
-- [ ] Toast notifications (sonner)
-- [ ] Empty states con ilustraciones
-- [ ] Onboarding flow para nuevos usuarios
-- [ ] SEO + Open Graph en landing
-- [ ] Rate limiting en API routes
-- [ ] Tests e2e (Playwright) para flujos críticos
-- [ ] Deploy a Vercel (producción)
-- [ ] Monitoreo (Sentry para errores)
-- [ ] Analytics básico
+- [x] Dark mode / Light mode toggle
+- [x] Responsive completo (mobile sidebar con Sheet)
+- [x] Loading skeletons en todas las páginas (6 rutas)
+- [x] Toast notifications (sonner wired up)
+- [x] Empty states con ilustraciones
+- [x] Onboarding flow para nuevos usuarios (WelcomeDialog 4 pasos)
+- [x] SEO + Open Graph en landing (metadataBase, OG, Twitter, robots.txt, sitemap.ts)
+- [x] Rate limiting en API routes (sliding window: api 60/min, ai 20/min)
+- [ ] Tests e2e (Playwright) — descoped para post-lanzamiento
+- [x] Deploy a Vercel (producción) — configurado en fases anteriores
+- [x] Monitoreo (Sentry para errores) — config completa, activar con DSN
+- [x] Analytics básico (Vercel Analytics integrado)
 
 **Entregable:** App lista para usuarios reales.
 
@@ -451,7 +449,7 @@ FASE 5  ━━━━━━━━━━━━━━━━━━━━━━━  S
    ↓
 FASE 6  ━━━━━━━━━━━━━━━━━━━━━━━  Bots mensajería ✅
    ↓
-FASE 7  ━━━━━━━━━━━━━━━━━━━━━━━  UX Polish + Deploy
+FASE 7  ━━━━━━━━━━━━━━━━━━━━━━━  UX Polish + Deploy ✅
 ```
 
 Cada fase es un incremento funcional completo y demostrable.

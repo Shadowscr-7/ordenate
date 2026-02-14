@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TelegramLink } from "@/components/dashboard/telegram-link";
+import { WelcomeDialog } from "@/components/dashboard/welcome-dialog";
 
 export const metadata = {
   title: "Dashboard",
@@ -264,6 +265,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Onboarding: Welcome dialog for first-time users */}
+      {totalDumps === 0 && <WelcomeDialog userName={firstName} />}
     </div>
   );
 }

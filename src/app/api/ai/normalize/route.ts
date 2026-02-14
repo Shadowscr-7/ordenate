@@ -15,6 +15,7 @@ import {
   apiError,
   apiServerError,
 } from "@/lib/api-response";
+import { aiLimiter, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   rawText: z.string().min(1, "El texto no puede estar vacío").max(50000),
@@ -22,6 +23,11 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    if (!aiLimiter.check(ip)) {
+      return apiError("Demasiadas solicitudes. Intenta de nuevo más tarde.", 429);
+    }
+
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
 

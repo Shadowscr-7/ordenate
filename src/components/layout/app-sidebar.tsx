@@ -53,9 +53,10 @@ const NAV_ITEMS = [
 
 interface AppSidebarProps {
   collapsed?: boolean;
+  onNavigate?: () => void;
 }
 
-export function AppSidebar({ collapsed = false }: AppSidebarProps) {
+export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -95,7 +96,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
               )}
               size={collapsed ? "icon" : "default"}
             >
-              <Link href={ROUTES.NEW_DUMP}>
+              <Link href={ROUTES.NEW_DUMP} onClick={onNavigate}>
                 <Plus className="h-4 w-4" />
                 {!collapsed && <span className="ml-2">Nuevo Dump</span>}
               </Link>
@@ -120,6 +121,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
                 <TooltipTrigger asChild>
                   <Link
                     href={item.href}
+                    onClick={onNavigate}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                       isActive
@@ -153,6 +155,7 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
           <TooltipTrigger asChild>
             <Link
               href={ROUTES.SETTINGS}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                 pathname === ROUTES.SETTINGS

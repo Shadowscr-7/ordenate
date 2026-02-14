@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   Calendar,
@@ -65,19 +66,16 @@ export function BillingPanel() {
   const [sub, setSub] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     fetchSubscription();
     const checkoutStatus = searchParams.get("checkout");
     if (checkoutStatus === "success") {
-      setToast({ type: "success", message: "¡Suscripción activada con éxito! 🎉" });
-      // Clean URL
+      toast.success("¡Suscripción activada con éxito! 🎉");
       window.history.replaceState({}, "", "/dashboard/settings");
-      // Refresh after a moment to get updated data from webhook
       setTimeout(() => fetchSubscription(), 2000);
     } else if (checkoutStatus === "canceled") {
-      setToast({ type: "error", message: "Pago cancelado. Puedes intentarlo de nuevo." });
+      toast.error("Pago cancelado. Puedes intentarlo de nuevo.");
       window.history.replaceState({}, "", "/dashboard/settings");
     }
   }, [searchParams]);
@@ -108,10 +106,10 @@ export function BillingPanel() {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        setToast({ type: "error", message: error ?? "Error al crear la sesión de pago." });
+        toast.error(error ?? "Error al crear la sesión de pago.");
       }
     } catch {
-      setToast({ type: "error", message: "Error de conexión." });
+      toast.error("Error de conexión.");
     } finally {
       setActionLoading(null);
     }
@@ -127,10 +125,10 @@ export function BillingPanel() {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        setToast({ type: "error", message: error ?? "Error al abrir el portal." });
+        toast.error(error ?? "Error al abrir el portal.");
       }
     } catch {
-      setToast({ type: "error", message: "Error de conexión." });
+      toast.error("Error de conexión.");
     } finally {
       setActionLoading(null);
     }
@@ -155,20 +153,6 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`animate-fade-in rounded-lg border p-3 text-sm ${
-            toast.type === "success"
-              ? "border-green-500/30 bg-green-500/10 text-green-600"
-              : "border-red-500/30 bg-red-500/10 text-red-600"
-          }`}
-        >
-          {toast.message}
-          <button onClick={() => setToast(null)} className="ml-2 underline text-[11px]">Cerrar</button>
-        </div>
-      )}
-
       {/* Current Plan */}
       <Card>
         <CardHeader>
