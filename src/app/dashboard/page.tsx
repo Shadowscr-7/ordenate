@@ -46,37 +46,30 @@ export default async function DashboardPage() {
   const isPro = subscription?.plan === "PRO";
   const workspaceId = user?.memberships[0]?.workspaceId;
 
-  // Fetch recent brain dumps
-  const recentDumps = workspaceId
-    ? await db.brainDump.findMany({
-        where: { workspaceId },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        include: {
-          _count: { select: { tasks: true } },
-          tasks: {
-            where: { status: "DONE" },
-            select: { id: true },
+  // Fetch all dashboard data in parallel to reduce latency
+  const [recentDumps, totalTasks, doneTasks, totalDumps] = workspaceId
+    ? await Promise.all([
+        db.brainDump.findMany({
+          where: { workspaceId },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: {
+            _count: { select: { tasks: true } },
+            tasks: {
+              where: { status: "DONE" },
+              select: { id: true },
+            },
           },
-        },
-      })
-    : [];
-
-  const totalTasks = workspaceId
-    ? await db.task.count({
-        where: { brainDump: { workspaceId } },
-      })
-    : 0;
-
-  const doneTasks = workspaceId
-    ? await db.task.count({
-        where: { brainDump: { workspaceId }, status: "DONE" },
-      })
-    : 0;
-
-  const totalDumps = workspaceId
-    ? await db.brainDump.count({ where: { workspaceId } })
-    : 0;
+        }),
+        db.task.count({
+          where: { brainDump: { workspaceId } },
+        }),
+        db.task.count({
+          where: { brainDump: { workspaceId }, status: "DONE" },
+        }),
+        db.brainDump.count({ where: { workspaceId } }),
+      ])
+    : [[], 0, 0, 0];
 
   // Monthly dump count for Basic plan limit display
   const now = new Date();
