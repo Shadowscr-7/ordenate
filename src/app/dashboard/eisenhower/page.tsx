@@ -8,7 +8,8 @@ import { useEffect, useState, useCallback, useTransition, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  pointerWithin,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -17,6 +18,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -121,6 +123,18 @@ function getColumnTasks(tasks: TaskItem[], columnId: ColumnId) {
     .filter((t) => getColumnId(t) === columnId)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
+
+// ─── Custom collision detection ─────────────────────────────
+// pointerWithin detects which column the cursor is physically inside,
+// returning the sortable item first (smaller rect) or the column itself
+// for empty-area drops.  closestCenter is the fallback when the cursor
+// is in a gap between columns during a fast drag.
+
+const customCollisionDetection: CollisionDetection = (args) => {
+  const pw = pointerWithin(args);
+  if (pw.length > 0) return pw;
+  return closestCenter(args);
+};
 
 // ─── Sortable Task Card ─────────────────────────────────────
 
@@ -627,7 +641,7 @@ export default function EisenhowerPage() {
         {/* DnD Context */}
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={customCollisionDetection}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
