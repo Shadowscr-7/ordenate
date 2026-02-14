@@ -235,24 +235,27 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 3 — Inteligencia Artificial
+## FASE 3 — Inteligencia Artificial ✅ COMPLETADA
 
 **Objetivo:** IA procesa texto e imágenes, sugiere clasificación.
 
-- [ ] Configurar cliente OpenAI (SDK)
-- [ ] API Route: `POST /api/ai/normalize` → enviar texto crudo al LLM
+- [x] Configurar cliente OpenAI (SDK)
+- [x] API Route: `POST /api/ai/normalize` → enviar texto crudo al LLM
   - Prompt: convertir texto desordenado en lista limpia de tareas (JSON)
-- [ ] API Route: `POST /api/ai/classify` → sugerir cuadrante Eisenhower
+- [x] API Route: `POST /api/ai/classify` → sugerir cuadrante Eisenhower
   - Prompt: clasificar cada tarea en Q1/Q2/Q3/Q4
-- [ ] Upload de imagen → Storage (R2/S3) → URL firmada
-- [ ] API Route: `POST /api/ai/ocr` → OpenAI Vision extrae texto de imagen
-- [ ] Pipeline completo: imagen → OCR → normalizar → clasificar → revisión
-- [ ] UI de "procesando" con progreso/spinner
-- [ ] Manejo de errores y reintentos
-- [ ] Configurar job async (Inngest/Trigger.dev) para procesamiento pesado
-- [ ] Output JSON estricto con validación Zod
+- [x] Upload de imagen → directo a OpenAI Vision (base64, sin storage)
+- [x] API Route: `POST /api/ai/ocr` → OpenAI Vision extrae texto de imagen
+- [x] Pipeline completo: imagen → OCR → normalizar → clasificar → revisión
+- [x] UI de "procesando" con progreso/spinner
+- [x] Manejo de errores y reintentos
+- [x] Output JSON estricto con validación Zod
+- [x] Toggle IA en página de nuevo dump (on/off)
+- [x] Modo imagen: upload→preview→OCR→editable→procesar
+- [x] Botón "Clasificar con IA" en detalle de dump
+- [x] Badges de cuadrante Eisenhower en tareas clasificadas
 
-**Entregable:** Flujo IA end-to-end (texto + foto → tareas clasificadas).
+**Entregable:** ✅ Flujo IA end-to-end (texto + foto → tareas clasificadas).
 
 ---
 

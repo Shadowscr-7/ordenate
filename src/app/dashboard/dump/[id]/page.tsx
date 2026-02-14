@@ -21,6 +21,8 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  Sparkles,
+  Target,
   Trash2,
   X,
 } from "lucide-react";
@@ -94,6 +96,13 @@ const TASK_STATUS_INFO: Record<string, { label: string; color: string }> = {
   HIDDEN: { label: "Oculta", color: "border-muted-foreground/20 bg-muted-foreground/20" },
 };
 
+const QUADRANT_BADGE: Record<string, { label: string; icon: string; className: string }> = {
+  Q1_DO: { label: "Hacer", icon: "🔴", className: "border-red-500/30 bg-red-500/10 text-red-500" },
+  Q2_SCHEDULE: { label: "Planificar", icon: "🔵", className: "border-blue-500/30 bg-blue-500/10 text-blue-500" },
+  Q3_DELEGATE: { label: "Delegar", icon: "🟡", className: "border-yellow-500/30 bg-yellow-500/10 text-yellow-500" },
+  Q4_DELETE: { label: "Eliminar", icon: "⚪", className: "border-neutral-500/30 bg-neutral-500/10 text-neutral-400" },
+};
+
 export default function BrainDumpDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -109,6 +118,7 @@ export default function BrainDumpDetailPage() {
   const [newTaskText, setNewTaskText] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fetchDump = useCallback(async () => {
@@ -219,6 +229,44 @@ export default function BrainDumpDetailPage() {
       await fetch(`/api/braindump/${id}`, { method: "DELETE" });
       router.push(ROUTES.HISTORY);
     });
+  }
+
+  async function classifyWithAI() {
+    if (!dump) return;
+    const pendingTasks = dump.tasks.filter(
+      (t) => t.status !== "HIDDEN" && !t.quadrant,
+    );
+    if (pendingTasks.length === 0) return;
+
+    setIsClassifying(true);
+    try {
+      const res = await fetch("/api/ai/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: pendingTasks.map((t) => t.text) }),
+      });
+      if (!res.ok) return;
+      const { data } = await res.json();
+
+      // Apply classifications
+      for (const ct of data.tasks) {
+        const task = pendingTasks.find(
+          (t) => t.text.toLowerCase().trim() === ct.text.toLowerCase().trim(),
+        );
+        if (task) {
+          await fetch(`/api/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quadrant: ct.quadrant }),
+          });
+        }
+      }
+      fetchDump();
+    } catch {
+      // ignore
+    } finally {
+      setIsClassifying(false);
+    }
   }
 
   // ── Render ──
@@ -361,26 +409,44 @@ export default function BrainDumpDetailPage() {
                 Revisa, edita o elimina las tareas extraídas de tu brain dump.
               </CardDescription>
             </div>
-            {hiddenCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs"
-                onClick={() => setShowHidden(!showHidden)}
-              >
-                {showHidden ? (
-                  <>
-                    <EyeOff className="h-3.5 w-3.5" />
-                    Ocultar ({hiddenCount})
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-3.5 w-3.5" />
-                    Mostrar ocultas ({hiddenCount})
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {dump.tasks.some((t) => t.status !== "HIDDEN" && !t.quadrant) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={classifyWithAI}
+                  disabled={isClassifying || isPending}
+                >
+                  {isClassifying ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Clasificar con IA
+                </Button>
+              )}
+              {hiddenCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => setShowHidden(!showHidden)}
+                >
+                  {showHidden ? (
+                    <>
+                      <EyeOff className="h-3.5 w-3.5" />
+                      Ocultar ({hiddenCount})
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-3.5 w-3.5" />
+                      Mostrar ocultas ({hiddenCount})
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-1">
@@ -456,17 +522,26 @@ export default function BrainDumpDetailPage() {
                   </div>
                 ) : (
                   <>
-                    <span
-                      className={`flex-1 text-sm ${
-                        task.status === "DONE"
-                          ? "text-muted-foreground line-through"
-                          : task.status === "HIDDEN"
-                            ? "text-muted-foreground/50 italic line-through"
-                            : ""
-                      }`}
-                    >
-                      {task.text}
-                    </span>
+                    <div className="flex flex-1 items-center gap-2 min-w-0">
+                      <span
+                        className={`text-sm ${
+                          task.status === "DONE"
+                            ? "text-muted-foreground line-through"
+                            : task.status === "HIDDEN"
+                              ? "text-muted-foreground/50 italic line-through"
+                              : ""
+                        }`}
+                      >
+                        {task.text}
+                      </span>
+                      {task.quadrant && QUADRANT_BADGE[task.quadrant] && (
+                        <span
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[10px] font-medium ${QUADRANT_BADGE[task.quadrant].className}`}
+                        >
+                          {QUADRANT_BADGE[task.quadrant].icon} {QUADRANT_BADGE[task.quadrant].label}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                       {/* Quick status buttons */}
                       {task.status === "HIDDEN" && (

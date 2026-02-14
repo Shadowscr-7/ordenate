@@ -1,6 +1,10 @@
 // ============================================================
 // Brain Dump API — Create new brain dump + parse into tasks
 // ============================================================
+// Supports two modes:
+//   1. Manual — split rawText by lines (default)
+//   2. AI     — normalize with LLM + classify Eisenhower
+// ============================================================
 
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
@@ -12,6 +16,7 @@ import {
   apiValidationError,
   apiServerError,
 } from "@/lib/api-response";
+import { normalizeText, classifyTasks } from "@/lib/ai";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +27,7 @@ export async function POST(request: NextRequest) {
     const parsed = createBrainDumpSchema.safeParse(body);
     if (!parsed.success) return apiValidationError(parsed.error);
 
-    const { title, rawText, source } = parsed.data;
+    const { title, rawText, source, useAI } = parsed.data;
 
     // Find user's workspace
     const user = await db.user.findUnique({
@@ -41,26 +46,58 @@ export async function POST(request: NextRequest) {
 
     const workspaceId = user.memberships[0].workspace.id;
 
-    // Parse text into lines (non-empty, trimmed)
-    const lines = rawText
-      .split(/\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+    let taskLines: string[];
+    let suggestedTitle = title || null;
+    let aiClassifications: { text: string; quadrant: string; confidence: number; reason: string }[] = [];
+
+    if (useAI) {
+      // ── AI Pipeline ──────────────────────────────────────
+      // Step 1: Normalize text into clean tasks
+      const normalized = await normalizeText(rawText);
+      taskLines = normalized.tasks;
+      if (!suggestedTitle && normalized.title) {
+        suggestedTitle = normalized.title;
+      }
+
+      // Step 2: Classify tasks into Eisenhower quadrants
+      if (taskLines.length > 0) {
+        const classified = await classifyTasks(taskLines);
+        aiClassifications = classified.tasks;
+      }
+    } else {
+      // ── Manual Pipeline ──────────────────────────────────
+      taskLines = rawText
+        .split(/\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    }
+
+    // Build task data with optional AI classification
+    const tasksData = taskLines.map((text, index) => {
+      const classification = aiClassifications.find(
+        (c) => c.text.toLowerCase().trim() === text.toLowerCase().trim(),
+      );
+
+      return {
+        text,
+        sortOrder: index,
+        status: "PENDING" as const,
+        quadrant: classification
+          ? (classification.quadrant as "Q1_DO" | "Q2_SCHEDULE" | "Q3_DELEGATE" | "Q4_DELETE")
+          : undefined,
+      };
+    });
 
     // Create brain dump with tasks in one transaction
     const brainDump = await db.brainDump.create({
       data: {
-        title: title || `Brain Dump ${new Date().toLocaleDateString("es-ES")}`,
+        title: suggestedTitle || `Brain Dump ${new Date().toLocaleDateString("es-ES")}`,
         rawText,
         source,
         status: "PROCESSED",
         workspaceId,
         tasks: {
-          create: lines.map((text, index) => ({
-            text,
-            sortOrder: index,
-            status: "PENDING",
-          })),
+          create: tasksData,
         },
       },
       include: {
@@ -70,7 +107,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return apiSuccess(brainDump, 201);
+    return apiSuccess(
+      {
+        ...brainDump,
+        aiClassifications: useAI ? aiClassifications : undefined,
+      },
+      201,
+    );
   } catch (error) {
     return apiServerError(error);
   }

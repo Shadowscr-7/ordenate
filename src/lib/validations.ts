@@ -25,6 +25,7 @@ export const createBrainDumpSchema = z.object({
   title: z.string().max(200).optional(),
   rawText: z.string().min(1, "El texto no puede estar vacío").max(50000),
   source: z.enum(["WEB", "IMAGE", "TELEGRAM", "WHATSAPP"]).default("WEB"),
+  useAI: z.boolean().default(false),
 });
 
 // ─── Task ───────────────────────────────────────────────────

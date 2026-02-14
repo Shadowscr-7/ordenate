@@ -1,35 +1,179 @@
 // ============================================================
-// New Brain Dump Page — Capture text ideas
+// New Brain Dump Page — Text + Image + AI Processing
+// ============================================================
+// Three input modes:
+//   1. Texto — Type ideas, one per line
+//   2. Imagen — Upload photo → OCR extract → editable text
+//   3. AI toggle — Process with AI (normalize + classify)
 // ============================================================
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Brain, Loader2, Send, Lightbulb } from "lucide-react";
+import {
+  Camera,
+  Check,
+  ImageIcon,
+  Lightbulb,
+  Loader2,
+  Send,
+  Sparkles,
+  Type,
+  Upload,
+  X,
+  Zap,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
+
+// ─── Types ──────────────────────────────────────────────────
+
+type InputMode = "text" | "image";
+
+type ProcessingStep = "idle" | "uploading" | "ocr" | "normalizing" | "classifying" | "saving" | "done" | "error";
+
+const STEP_LABELS: Record<ProcessingStep, string> = {
+  idle: "",
+  uploading: "Subiendo imagen…",
+  ocr: "Extrayendo texto de la imagen…",
+  normalizing: "IA normalizando tareas…",
+  classifying: "IA clasificando en Eisenhower…",
+  saving: "Guardando brain dump…",
+  done: "¡Listo!",
+  error: "Error en el procesamiento",
+};
+
+const STEP_ORDER: ProcessingStep[] = [
+  "uploading",
+  "ocr",
+  "normalizing",
+  "classifying",
+  "saving",
+  "done",
+];
+
+// ─── Component ──────────────────────────────────────────────
 
 export default function NewDumpPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form state
   const [title, setTitle] = useState("");
   const [rawText, setRawText] = useState("");
   const [error, setError] = useState("");
+  const [inputMode, setInputMode] = useState<InputMode>("text");
+  const [useAI, setUseAI] = useState(true);
+
+  // Image state
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMimeType, setImageMimeType] = useState<string>("image/jpeg");
+  const [ocrDone, setOcrDone] = useState(false);
+
+  // Processing state
+  const [processingStep, setProcessingStep] = useState<ProcessingStep>("idle");
 
   const lineCount = rawText
     .split("\n")
     .filter((l) => l.trim().length > 0).length;
+
+  // ── Image handling ──
+
+  const handleImageSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 10 * 1024 * 1024) {
+        setError("La imagen no puede superar 10 MB.");
+        return;
+      }
+
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ];
+      if (!validTypes.includes(file.type)) {
+        setError("Formato no soportado. Usa JPG, PNG, WebP o GIF.");
+        return;
+      }
+
+      setError("");
+      setImageMimeType(file.type);
+      setOcrDone(false);
+      setRawText("");
+
+      // Preview
+      const previewReader = new FileReader();
+      previewReader.onload = () => setImagePreview(previewReader.result as string);
+      previewReader.readAsDataURL(file);
+
+      // Base64 for API
+      const b64Reader = new FileReader();
+      b64Reader.onload = () => {
+        const dataUrl = b64Reader.result as string;
+        // Strip data:image/...;base64, prefix
+        const base64 = dataUrl.split(",")[1];
+        setImageBase64(base64);
+      };
+      b64Reader.readAsDataURL(file);
+    },
+    [],
+  );
+
+  const clearImage = useCallback(() => {
+    setImagePreview(null);
+    setImageBase64(null);
+    setOcrDone(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  // ── OCR ──
+
+  async function runOCR() {
+    if (!imageBase64) return;
+
+    setError("");
+    setProcessingStep("ocr");
+
+    try {
+      const res = await fetch("/api/ai/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageBase64, mimeType: imageMimeType }),
+      });
+
+      const { data, error: apiErr } = await res.json();
+      if (!res.ok) {
+        setError(apiErr || "Error al extraer texto de la imagen.");
+        setProcessingStep("error");
+        return;
+      }
+
+      setRawText(data.text);
+      setOcrDone(true);
+      setProcessingStep("idle");
+    } catch {
+      setError("Error de conexión al servicio de OCR.");
+      setProcessingStep("error");
+    }
+  }
+
+  // ── Submit ──
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,37 +185,83 @@ export default function NewDumpPage() {
 
     startTransition(async () => {
       try {
+        // Show processing steps
+        if (useAI) {
+          setProcessingStep("normalizing");
+        } else {
+          setProcessingStep("saving");
+        }
+
         const res = await fetch("/api/braindump", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: title.trim() || undefined,
             rawText: rawText.trim(),
-            source: "WEB",
+            source: inputMode === "image" ? "IMAGE" : "WEB",
+            useAI,
           }),
         });
 
         if (!res.ok) {
           const data = await res.json();
           setError(data.error || "Error al crear el brain dump.");
+          setProcessingStep("error");
           return;
         }
 
+        setProcessingStep("done");
         const { data } = await res.json();
+
+        // Brief pause to show "done" state
+        await new Promise((r) => setTimeout(r, 600));
         router.push(`/dashboard/dump/${data.id}`);
       } catch {
         setError("Error de conexión. Intenta de nuevo.");
+        setProcessingStep("error");
       }
     });
   }
 
+  const isProcessing =
+    processingStep !== "idle" &&
+    processingStep !== "done" &&
+    processingStep !== "error";
+
+  // ── Render ──
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      {/* Header */}
       <div className="animate-fade-in">
         <h1 className="text-3xl font-bold tracking-tight">Nuevo Brain Dump</h1>
         <p className="mt-1 text-muted-foreground">
-          Escribe todas tus ideas, una por línea. Después podrás priorizarlas.
+          Escribe o sube una foto con tus ideas. La IA las organiza por ti.
         </p>
+      </div>
+
+      {/* Input Mode Tabs */}
+      <div className="flex gap-2 animate-fade-in">
+        <Button
+          variant={inputMode === "text" ? "default" : "outline"}
+          size="sm"
+          className="gap-2"
+          onClick={() => setInputMode("text")}
+          disabled={isProcessing}
+        >
+          <Type className="h-4 w-4" />
+          Texto
+        </Button>
+        <Button
+          variant={inputMode === "image" ? "default" : "outline"}
+          size="sm"
+          className="gap-2"
+          onClick={() => setInputMode("image")}
+          disabled={isProcessing}
+        >
+          <Camera className="h-4 w-4" />
+          Imagen
+        </Button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in-up">
@@ -80,73 +270,252 @@ export default function NewDumpPage() {
           <Label htmlFor="title">Título (opcional)</Label>
           <Input
             id="title"
-            placeholder="Ej: Ideas para el proyecto, Tareas de la semana..."
+            placeholder={useAI ? "La IA sugerirá un título si lo dejas vacío" : "Ej: Tareas de la semana..."}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            disabled={isPending}
+            disabled={isProcessing}
           />
         </div>
 
-        {/* Raw Text */}
-        <div className="space-y-2">
-          <Label htmlFor="rawText">Tus ideas</Label>
-          <Textarea
-            id="rawText"
-            placeholder={`Escribe una idea por línea...\n\nEjemplo:\nTerminar presentación del lunes\nComprar regalos de navidad\nLlamar al dentista\nEstudiar para el examen\nOrganizar archivos del escritorio`}
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            className="min-h-[240px] resize-y font-mono text-sm leading-relaxed"
-            disabled={isPending}
-          />
-          {rawText.trim() && (
-            <p className="text-xs text-muted-foreground">
-              {lineCount} {lineCount === 1 ? "tarea detectada" : "tareas detectadas"}
-            </p>
-          )}
-        </div>
+        {/* ── Image Upload ── */}
+        {inputMode === "image" && (
+          <div className="space-y-3">
+            <Label>Imagen</Label>
 
-        {/* Tip */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex items-start gap-3 py-3">
-            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Consejo:</span>{" "}
-              Escribe una idea por línea. No te preocupes por el orden o la
-              redacción, después podrás editarlas y clasificarlas en el tablero
-              Eisenhower.
-            </p>
+            {!imagePreview ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/20 py-12 transition-colors hover:border-primary/40 hover:bg-muted/40"
+              >
+                <div className="rounded-full bg-primary/10 p-3">
+                  <Upload className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">
+                    Haz clic para subir una imagen
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPG, PNG, WebP o GIF — Máx 10 MB
+                  </p>
+                </div>
+              </button>
+            ) : (
+              <div className="relative overflow-hidden rounded-xl border bg-card">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="max-h-64 w-full object-contain bg-black/5"
+                />
+                <div className="flex items-center justify-between border-t px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {ocrDone ? (
+                        <span className="flex items-center gap-1 text-green-500">
+                          <Check className="h-3 w-3" /> Texto extraído
+                        </span>
+                      ) : (
+                        "Imagen cargada"
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {!ocrDone && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        className="h-7 gap-1.5 text-xs"
+                        onClick={runOCR}
+                        disabled={isProcessing || !imageBase64}
+                      >
+                        {processingStep === "ocr" ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                        Extraer texto
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs"
+                      onClick={clearImage}
+                      disabled={isProcessing}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+          </div>
+        )}
+
+        {/* ── Text Area ── */}
+        {(inputMode === "text" || ocrDone) && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="rawText">
+                {ocrDone ? "Texto extraído (editable)" : "Tus ideas"}
+              </Label>
+              {rawText.trim() && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {lineCount} {lineCount === 1 ? "tarea" : "tareas"} detectadas
+                </span>
+              )}
+            </div>
+            <Textarea
+              id="rawText"
+              placeholder={
+                ocrDone
+                  ? "El texto extraído de la imagen aparecerá aquí. Puedes editarlo antes de procesar."
+                  : `Escribe una idea por línea...\n\nEjemplo:\nTerminar presentación del lunes\nComprar regalos de navidad\nLlamar al dentista\nEstudiar para el examen`
+              }
+              value={rawText}
+              onChange={(e) => setRawText(e.target.value)}
+              className="min-h-[200px] resize-y font-mono text-sm leading-relaxed"
+              disabled={isProcessing}
+            />
+          </div>
+        )}
+
+        {/* ── AI Toggle ── */}
+        <Card className={`border transition-colors ${useAI ? "border-primary/30 bg-primary/5" : "border-muted"}`}>
+          <CardContent className="flex items-center gap-4 py-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <Zap className={`h-4 w-4 ${useAI ? "text-primary" : "text-muted-foreground"}`} />
+                <span className="text-sm font-medium">
+                  Procesar con IA
+                </span>
+                {useAI && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    GPT-4o mini
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {useAI
+                  ? "La IA limpiará el texto, normalizará las tareas y sugerirá clasificación Eisenhower"
+                  : "Cada línea se convertirá en una tarea tal cual"}
+              </p>
+            </div>
+            <Switch
+              checked={useAI}
+              onCheckedChange={setUseAI}
+              disabled={isProcessing}
+            />
           </CardContent>
         </Card>
 
-        {/* Error */}
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
+        {/* Tip */}
+        {!useAI && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="flex items-start gap-3 py-3">
+              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Consejo:</span>{" "}
+                Escribe una idea por línea. Después podrás editarlas y
+                clasificarlas en el tablero Eisenhower.
+              </p>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Submit */}
+        {/* ── Processing Progress ── */}
+        {isProcessing && (
+          <Card className="border-primary/30 bg-primary/5 animate-fade-in">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="font-medium text-sm">
+                  {STEP_LABELS[processingStep]}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {STEP_ORDER.slice(
+                  0,
+                  STEP_ORDER.indexOf(processingStep) + 1,
+                ).map((step) => (
+                  <div key={step} className="flex items-center gap-2 text-xs">
+                    {step === processingStep ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                    ) : (
+                      <Check className="h-3 w-3 text-green-500" />
+                    )}
+                    <span
+                      className={
+                        step === processingStep
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {STEP_LABELS[step]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Error ── */}
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
+            <X className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+
+        {/* ── Submit ── */}
         <div className="flex items-center gap-3">
           <Button
             type="submit"
-            disabled={isPending || !rawText.trim()}
+            disabled={
+              isPending ||
+              !rawText.trim() ||
+              isProcessing
+            }
             className="bg-gradient-to-r from-primary to-cyan-500 text-white shadow-md shadow-primary/20"
           >
-            {isPending ? (
+            {isPending || isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Procesando...
+                Procesando…
               </>
             ) : (
               <>
-                <Send className="mr-2 h-4 w-4" />
-                Crear Brain Dump
+                {useAI ? (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
+                {useAI ? "Crear con IA" : "Crear Brain Dump"}
               </>
             )}
           </Button>
           <span className="text-xs text-muted-foreground">
             {lineCount > 0
-              ? `Se crearán ${lineCount} tareas`
-              : "Escribe algo para empezar"}
+              ? useAI
+                ? `${lineCount} líneas → IA normalizará + clasificará`
+                : `Se crearán ${lineCount} tareas`
+              : inputMode === "image" && !ocrDone
+                ? "Sube una imagen y extrae el texto"
+                : "Escribe algo para empezar"}
           </span>
         </div>
       </form>
