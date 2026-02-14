@@ -6,8 +6,13 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, getSession } from "@/lib/auth/actions";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { OnboardingProvider } from "@/lib/onboarding/provider";
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   // First check Supabase auth session
   const session = await getSession();
   if (!session) {
@@ -22,8 +27,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <AppShell userEmail={user.email} userName={user.name}>
-      {children}
-    </AppShell>
+    <OnboardingProvider
+      initialCompleted={user.onboardingCompleted}
+      initialStep={user.onboardingStep}
+    >
+      <AppShell userEmail={user.email} userName={user.name}>
+        {children}
+      </AppShell>
+    </OnboardingProvider>
   );
 }

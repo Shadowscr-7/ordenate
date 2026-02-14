@@ -173,6 +173,7 @@ function SortableTaskCard({
   onUpdateField,
   isPending,
   showDump,
+  isDragDropTourTarget = false,
 }: {
   task: TaskItem;
   onToggleDone: (task: TaskItem) => void;
@@ -181,6 +182,7 @@ function SortableTaskCard({
   onUpdateField: (taskId: string, field: string, value: unknown) => void;
   isPending: boolean;
   showDump: boolean;
+  isDragDropTourTarget?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -198,6 +200,7 @@ function SortableTaskCard({
     <div
       ref={setNodeRef}
       style={style}
+      data-tour={isDragDropTourTarget ? "drag-drop" : undefined}
       className={`bg-card rounded-lg border transition-all ${
         isDragging
           ? "ring-primary/30 scale-[1.02] opacity-50 shadow-lg ring-2"
@@ -487,7 +490,7 @@ function DroppableColumn({
               </p>
             </div>
           ) : (
-            filtered.map((task) => (
+            filtered.map((task, index) => (
               <SortableTaskCard
                 key={task.id}
                 task={task}
@@ -497,6 +500,7 @@ function DroppableColumn({
                 onUpdateField={onUpdateField}
                 isPending={isPending}
                 showDump={showDump}
+                isDragDropTourTarget={index === 0}
               />
             ))
           )}
@@ -829,6 +833,7 @@ export default function EisenhowerPage() {
                   setBrainDumpFilter(value || null);
                 }}
                 disabled={loading}
+                data-tour="eisenhower-filter"
                 className="border-input bg-background relative z-50 h-7 rounded-md border px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Todos los Brain Dumps</option>
@@ -977,20 +982,27 @@ export default function EisenhowerPage() {
 
           {/* 4 Quadrants Grid */}
           <div className="grid gap-3 md:grid-cols-2">
-            {quadrantColumns.map((col) => (
-              <DroppableColumn
-                key={col.id}
-                column={col}
-                tasks={getColumnTasks(tasks, col.id)}
-                onToggleDone={toggleDone}
-                onDelete={deleteTask}
-                onEdit={startEdit}
-                onUpdateField={updateField}
-                isPending={isPending}
-                showDump={showDump}
-                hideDone={hideDone}
-              />
-            ))}
+            {quadrantColumns.map((col) => {
+              const tourAttr = col.id === "Q1_DO" ? "quadrant-1" : 
+                               col.id === "Q2_SCHEDULE" ? "quadrant-2" : 
+                               col.id === "Q3_DELEGATE" ? "quadrant-3" : 
+                               col.id === "Q4_DELETE" ? "quadrant-4" : undefined;
+              return (
+                <div key={col.id} data-tour={tourAttr}>
+                  <DroppableColumn
+                    column={col}
+                    tasks={getColumnTasks(tasks, col.id)}
+                    onToggleDone={toggleDone}
+                    onDelete={deleteTask}
+                    onEdit={startEdit}
+                    onUpdateField={updateField}
+                    isPending={isPending}
+                    showDump={showDump}
+                    hideDone={hideDone}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* Drag overlay */}

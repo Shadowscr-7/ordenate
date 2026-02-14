@@ -281,7 +281,7 @@ export default function BacklogPage() {
       </div>
 
       {/* Add new task */}
-      <Card className="bg-card mb-6 p-3">
+      <Card className="bg-card mb-6 p-3" data-tour="create-task">
         <div className="flex gap-2">
           <Input
             placeholder="Escribe una tarea y presiona Enter..."
@@ -307,7 +307,7 @@ export default function BacklogPage() {
       </Card>
 
       {selectedTasks.size > 0 && (
-        <Card className="bg-primary/5 border-primary/20 mb-4 p-3">
+        <Card className="bg-primary/5 border-primary/20 mb-4 p-3" data-tour="bulk-actions">
           <div className="flex items-center justify-between gap-4">
             <span className="text-primary text-sm font-medium">
               {selectedTasks.size}{" "}
@@ -364,7 +364,7 @@ export default function BacklogPage() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-tour="task-list">
           <div className="mb-1 flex items-center gap-2 px-1 py-2">
             <Checkbox checked={selectedTasks.size === tasks.length} onCheckedChange={toggleAll} />
             <span

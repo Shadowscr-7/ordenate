@@ -180,7 +180,7 @@ export default function ParetoPage() {
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-in space-y-5">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4" data-tour="pareto-principle">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               <Target className="mr-2 inline-block h-6 w-6 text-amber-500" />
@@ -271,7 +271,7 @@ export default function ParetoPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-amber-500/20 bg-amber-500/[0.02]">
+            <Card className="border-amber-500/20 bg-amber-500/[0.02]" data-tour="pareto-list">
               <CardContent className="divide-border divide-y py-1">
                 {displayPareto.map((task) => (
                   <TaskRow

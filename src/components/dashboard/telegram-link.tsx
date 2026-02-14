@@ -252,6 +252,7 @@ export function TelegramLink({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center"
+                data-tour="telegram-qr"
               >
                 <div className="border-primary/20 shadow-primary/5 relative rounded-2xl border-2 bg-white p-4 shadow-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -316,7 +317,7 @@ export function TelegramLink({
               </div>
 
               {/* Steps */}
-              <div className="bg-accent/30 space-y-3 rounded-xl border p-4">
+              <div className="bg-accent/30 space-y-3 rounded-xl border p-4" data-tour="telegram-bot">
                 <h4 className="text-sm font-semibold">Pasos:</h4>
                 <ol className="text-muted-foreground space-y-2 text-sm">
                   <li className="flex items-start gap-2">

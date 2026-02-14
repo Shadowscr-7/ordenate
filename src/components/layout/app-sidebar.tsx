@@ -119,6 +119,7 @@ export function AppSidebar({ collapsed = false, onNavigate }: AppSidebarProps) {
                   <Link
                     href={item.href}
                     onClick={onNavigate}
+                    data-tour={item.label === "Backlog" ? "sidebar-backlog" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                       isActive

@@ -92,6 +92,7 @@ export default async function DashboardPage() {
         </div>
         <Button
           asChild
+          data-tour="new-dump"
           className="group/btn from-primary shadow-primary/20 hover:shadow-primary/30 bg-gradient-to-r to-cyan-500 text-white shadow-md transition-all hover:shadow-lg"
         >
           <Link href={ROUTES.NEW_DUMP}>
@@ -103,8 +104,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Telegram Link — Pro feature or upgrade CTA */}
-      <div className="animate-fade-in-up stagger-1">
-        {isPro ? (
+      <div className="animate-fade-in-up stagger-1" data-tour="telegram-link">{isPro ? (
           <TelegramLink userId={user?.id ?? ""} isLinked={!!user?.telegramChatId} />
         ) : (
           <Card className="border-primary/20 from-primary/5 border-dashed bg-gradient-to-r to-cyan-400/5">
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
 
       {/* Recent Brain Dumps — Compact table */}
       {recentDumps.length > 0 ? (
-        <div className="animate-fade-in-up stagger-3 space-y-2">
+        <div className="animate-fade-in-up stagger-3 space-y-2" data-tour="recent-dumps">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Brain Dumps recientes</h2>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">

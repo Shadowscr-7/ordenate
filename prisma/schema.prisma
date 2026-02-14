@@ -18,16 +18,19 @@ datasource db {
 // ─── USERS & WORKSPACES ─────────────────────────────────────
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  name           String?
-  avatarUrl      String?  @map("avatar_url")
-  authId         String   @unique @map("auth_id") // Supabase Auth UID
-  telegramChatId String?  @unique @map("telegram_chat_id")
-  telegramLinkedAt DateTime? @map("telegram_linked_at")
-  telegramPendingText String? @map("telegram_pending_text") @db.Text
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  name                  String?
+  avatarUrl             String?   @map("avatar_url")
+  authId                String    @unique @map("auth_id") // Supabase Auth UID
+  telegramChatId        String?   @unique @map("telegram_chat_id")
+  telegramLinkedAt      DateTime? @map("telegram_linked_at")
+  telegramPendingText   String?   @map("telegram_pending_text") @db.Text
+  onboardingCompleted   Boolean   @default(false) @map("onboarding_completed")
+  onboardingStep        Int       @default(0) @map("onboarding_step")
+  onboardingSkippedAt   DateTime? @map("onboarding_skipped_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   // Relations
   memberships WorkspaceMember[]

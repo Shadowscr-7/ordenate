@@ -96,7 +96,7 @@ export default async function DumpsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4" data-tour="dumps-stats">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 rounded-lg p-3">
@@ -162,7 +162,7 @@ export default async function DumpsPage() {
           </Button>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-tour="dumps-list">
           {dumps.map((dump) => {
             const doneCount = dump.tasks.filter((t) => t.status === "DONE").length;
             const totalCount = dump._count.tasks;

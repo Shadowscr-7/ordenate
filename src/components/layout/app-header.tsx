@@ -12,6 +12,7 @@ import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 
 import { signOut } from "@/lib/auth/actions";
 
+import { HeaderHelpButton } from "@/components/onboarding/header-help-button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AppHeaderProps {
@@ -77,7 +77,7 @@ export function AppHeader({
         </TooltipContent>
       </Tooltip>
 
-      {/* Right: Theme + User */}
+      {/* Right: Theme + Help + User */}
       <div className="flex items-center gap-2">
         {/* Theme Toggle */}
         <Tooltip>
@@ -95,6 +95,9 @@ export function AppHeader({
           </TooltipTrigger>
           <TooltipContent>Cambiar tema</TooltipContent>
         </Tooltip>
+
+        {/* Help Button */}
+        <HeaderHelpButton />
 
         {/* User Menu */}
         <DropdownMenu>
