@@ -23,7 +23,10 @@ import {
   sendMessageWithKeyboard,
   answerCallbackQuery,
   extractLinkCode,
+  getFileUrl,
 } from "@/lib/telegram";
+import { normalizeText, classifyTasks, extractTextFromImage } from "@/lib/ai";
+import { hasProAccess } from "@/lib/plan-gate";
 
 export async function POST(request: NextRequest) {
   const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
@@ -89,11 +92,32 @@ function getUserWithWorkspace(chatId: number) {
     where: { telegramChatId: String(chatId) },
     include: {
       memberships: {
-        include: { workspace: true },
+        include: { workspace: { include: { subscription: true } } },
         take: 1,
       },
     },
   });
+}
+
+/** Check Pro subscription. Returns workspace if allowed, or sends denial message and returns null. */
+async function requirePro(
+  chatId: number,
+  user: NonNullable<Awaited<ReturnType<typeof getUserWithWorkspace>>>,
+): Promise<string | null> {
+  const workspace = user.memberships[0]?.workspace;
+  if (!workspace) {
+    await sendMessage(chatId, `❌ No se encontró tu workspace. Contacta soporte.`);
+    return null;
+  }
+  const gate = await hasProAccess(workspace.id);
+  if (!gate.allowed) {
+    await sendMessage(
+      chatId,
+      `🔒 <b>Función Pro</b>\n\nEl bot de Telegram es una función exclusiva del plan Pro.\nActualiza tu plan desde la app web para usarlo. ✨`,
+    );
+    return null;
+  }
+  return workspace.id;
 }
 
 function parseLines(text: string): string[] {
@@ -203,14 +227,11 @@ async function handleTextMessage(chatId: number, text: string) {
     return;
   }
 
+  const workspaceId = await requirePro(chatId, user);
+  if (!workspaceId) return;
+
   const workspace = user.memberships[0]?.workspace;
-  if (!workspace) {
-    await sendMessage(
-      chatId,
-      `❌ No se encontró tu workspace. Contacta soporte.`,
-    );
-    return;
-  }
+  if (!workspace) return;
 
   const pending = decodePending(user.telegramPendingText);
 
@@ -468,7 +489,7 @@ async function handleCancel(chatId: number) {
   );
 }
 
-// ── Photo handler ────────────────────────────────────────────
+// ── Photo handler — OCR → AI normalize → classify → create dump ──
 
 async function handlePhotoMessage(
   chatId: number,
@@ -485,29 +506,88 @@ async function handlePhotoMessage(
     return;
   }
 
-  const workspace = user.memberships[0]?.workspace;
-  if (!workspace) {
+  const workspaceId = await requirePro(chatId, user);
+  if (!workspaceId) return;
+
+  await sendMessage(chatId, `📷 Imagen recibida. Procesando con IA… ⏳`);
+
+  try {
+    // 1. Download image from Telegram
+    const fileUrl = await getFileUrl(fileId);
+    if (!fileUrl) {
+      await sendMessage(chatId, `❌ No se pudo descargar la imagen. Intenta de nuevo.`);
+      return;
+    }
+
+    const imgResponse = await fetch(fileUrl);
+    const buffer = Buffer.from(await imgResponse.arrayBuffer());
+    const base64 = buffer.toString("base64");
+    const contentType = imgResponse.headers.get("content-type") ?? "image/jpeg";
+
+    // 2. OCR — extract text from image
+    const ocr = await extractTextFromImage(base64, contentType);
+    const extractedText = ocr.text?.trim();
+
+    if (!extractedText) {
+      await sendMessage(
+        chatId,
+        `⚠️ No se pudo extraer texto de la imagen.\nIntenta con una foto más clara o envía el texto directamente.`,
+      );
+      return;
+    }
+
+    // 3. AI Normalize + Classify
+    const normalized = await normalizeText(extractedText);
+    const taskLines = normalized.tasks;
+    const suggestedTitle = caption || normalized.title || `Dump foto ${new Date().toLocaleDateString("es-ES")}`;
+
+    let aiClassifications: { text: string; quadrant: string; confidence: number; reason: string }[] = [];
+    if (taskLines.length > 0) {
+      const classified = await classifyTasks(taskLines);
+      aiClassifications = classified.tasks;
+    }
+
+    // 4. Create BrainDump with classified tasks
+    const tasksData = taskLines.map((text, index) => {
+      const classification = aiClassifications.find(
+        (c) => c.text.toLowerCase().trim() === text.toLowerCase().trim(),
+      );
+      return {
+        text,
+        sortOrder: index,
+        status: "PENDING" as const,
+        quadrant: classification
+          ? (classification.quadrant as "Q1_DO" | "Q2_SCHEDULE" | "Q3_DELEGATE" | "Q4_DELETE")
+          : undefined,
+      };
+    });
+
+    await db.brainDump.create({
+      data: {
+        title: suggestedTitle,
+        rawText: extractedText,
+        imageUrl: `telegram:${fileId}`,
+        source: "TELEGRAM",
+        status: "PROCESSED",
+        workspaceId,
+        tasks: {
+          create: tasksData,
+        },
+      },
+    });
+
     await sendMessage(
       chatId,
-      `❌ No se encontró tu workspace. Contacta soporte.`,
+      `✅ <b>Brain dump creado desde imagen</b>\n\n` +
+        `📋 <b>${suggestedTitle}</b>\n` +
+        `Se crearon <b>${taskLines.length}</b> ${taskLines.length === 1 ? "tarea" : "tareas"} con clasificación Eisenhower.\n\n` +
+        `Abre la app para verlo. 🎯`,
     );
-    return;
+  } catch (err) {
+    console.error("[Telegram] Photo processing error:", err);
+    await sendMessage(
+      chatId,
+      `❌ Error al procesar la imagen. Intenta de nuevo o envía el texto directamente.`,
+    );
   }
-
-  await db.brainDump.create({
-    data: {
-      rawText: caption || null,
-      imageUrl: `telegram:${fileId}`,
-      source: "TELEGRAM",
-      status: "DRAFT",
-      workspaceId: workspace.id,
-    },
-  });
-
-  await sendMessage(
-    chatId,
-    `✅ <b>Brain dump con imagen creado</b>\n\n` +
-      (caption ? `📝 "${caption}"\n\n` : "") +
-      `📷 Imagen guardada. Abre la app para procesarla. 🎯`,
-  );
 }

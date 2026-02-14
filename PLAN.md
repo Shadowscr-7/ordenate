@@ -372,23 +372,34 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 6 — Bots de Mensajería (Telegram + WhatsApp)
+## FASE 6 — Bots de Mensajería (Telegram) ✅ COMPLETADA
 
 **Objetivo:** Capturar brain dumps desde mensajería.
 
-- [ ] Telegram Bot:
-  - Registrar bot con BotFather
-  - Webhook: `POST /api/webhooks/telegram`
-  - Recibir texto → crear BrainDump → procesar con IA
-  - Recibir foto → OCR → crear BrainDump
-  - Vincular cuenta Telegram con User (código de enlace)
-- [ ] WhatsApp Business API:
-  - Configurar webhook
-  - Mismo flujo que Telegram
-- [ ] Notificaciones de confirmación al usuario
-- [ ] Solo disponible en plan Pro
+- [x] Telegram Bot:
+  - [x] Registrar bot con BotFather (`@OrdenateBot`)
+  - [x] Webhook: `POST /api/webhooks/telegram` (con secret token validation)
+  - [x] Webhook setup: `GET /api/webhooks/telegram/setup`
+  - [x] Recibir texto → flujo conversacional → crear BrainDump (nuevo o agregar a existente)
+  - [x] Recibir foto → OCR + AI normalize + classify Eisenhower → crear BrainDump procesado
+  - [x] Vincular cuenta Telegram con User (código QR + deep link `OD-XXXX`)
+  - [x] Desvincular: `POST /api/telegram/unlink`
+  - [x] Flujo conversacional con estado (`AWAITING_CHOICE` / `AWAITING_TITLE`)
+  - [x] Inline keyboard: elegir dump existente, crear nuevo, cancelar
+  - [x] Comando `/cancelar` para descartar pendiente
+- [ ] WhatsApp Business API — Descartado (requiere cuenta Business API de pago)
+- [x] Notificaciones de confirmación al usuario (mensajes Telegram en cada acción)
+- [x] Solo disponible en plan Pro (gating con `hasProAccess` en webhook)
+- [x] Env vars en schema de validación (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`)
 
-**Entregable:** Brain dumps creados desde Telegram y WhatsApp.
+**Archivos:**
+- `src/lib/telegram.ts` — helpers (sendMessage, getFileUrl, setWebhook, etc.)
+- `src/app/api/webhooks/telegram/route.ts` — webhook handler completo
+- `src/app/api/webhooks/telegram/setup/route.ts` — registrar webhook
+- `src/app/api/telegram/unlink/route.ts` — desvincular cuenta
+- `src/components/dashboard/telegram-link.tsx` — componente QR + deep link
+
+**Entregable:** ✅ Brain dumps creados desde Telegram con flujo conversacional y OCR.
 
 ---
 
@@ -438,7 +449,7 @@ FASE 4.5━━━━━━━━━━━━━━━━━━━━━━━  A
    ↓
 FASE 5  ━━━━━━━━━━━━━━━━━━━━━━━  Stripe Billing ✅
    ↓
-FASE 6  ━━━━━━━━━━━━━━━━━━━━━━━  Bots mensajería
+FASE 6  ━━━━━━━━━━━━━━━━━━━━━━━  Bots mensajería ✅
    ↓
 FASE 7  ━━━━━━━━━━━━━━━━━━━━━━━  UX Polish + Deploy
 ```
