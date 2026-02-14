@@ -197,20 +197,20 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 1 — Brain Dump Básico (Texto)
+## FASE 1 — Brain Dump Básico (Texto) ✅ COMPLETADA
 
 **Objetivo:** El usuario puede crear un brain dump de texto y ver las líneas extraídas.
 
-- [ ] Página "Nuevo Brain Dump" con textarea grande
-- [ ] API Route: `POST /api/braindump` → guardar en DB
-- [ ] Parseo básico: dividir texto por líneas/saltos
-- [ ] Página "Revisión de líneas" → lista editable de TaskLines
-- [ ] CRUD de TaskLines (editar texto, eliminar, reordenar)
-- [ ] Página Dashboard con lista de Brain Dumps recientes
-- [ ] Estados de BrainDump: `draft` → `processed` → `archived`
-- [ ] Estados de TaskLine: `pending` → `done` → `hidden`
+- [x] Página "Nuevo Brain Dump" con textarea grande
+- [x] API Route: `POST /api/braindump` → guardar en DB
+- [x] Parseo básico: dividir texto por líneas/saltos
+- [x] Página "Revisión de líneas" → lista editable de TaskLines
+- [x] CRUD de TaskLines (editar texto, eliminar, reordenar)
+- [x] Página Dashboard con lista de Brain Dumps recientes
+- [x] Estados de BrainDump: `draft` → `processed` → `archived`
+- [x] Estados de TaskLine: `pending` → `done` → `hidden`
 
-**Entregable:** Flujo completo texto → líneas → revisión.
+**Entregable:** ✅ Flujo completo texto → líneas → revisión.
 
 ---
 
@@ -218,18 +218,18 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 **Objetivo:** Tablero de 4 cuadrantes con drag & drop funcional.
 
-- [ ] Componente `EisenhowerBoard` con 4 columnas:
+- [x] Componente `EisenhowerBoard` con 4 columnas:
   - Q1: Urgente + Importante (Hacer)
   - Q2: No Urgente + Importante (Planificar)
   - Q3: Urgente + No Importante (Delegar)
   - Q4: No Urgente + No Importante (Eliminar)
-- [ ] Integrar dnd-kit para drag & drop entre cuadrantes
-- [ ] API Route: `PATCH /api/tasks/:id` → actualizar cuadrante
-- [ ] Persistencia optimista (actualizar UI antes de confirmar API)
-- [ ] Tarjeta de tarea con: texto, badge de cuadrante, fecha, acciones
-- [ ] Filtros: mostrar/ocultar completadas
-- [ ] Acción "Marcar como hecha" → ocultar automáticamente
-- [ ] Animaciones de transición entre cuadrantes
+- [x] Integrar dnd-kit para drag & drop entre cuadrantes
+- [x] API Route: `PATCH /api/tasks/:id` → actualizar cuadrante
+- [x] Persistencia optimista (actualizar UI antes de confirmar API)
+- [x] Tarjeta de tarea con: texto, badge de cuadrante, fecha, acciones
+- [x] Filtros: mostrar/ocultar completadas
+- [x] Acción "Marcar como hecha" → ocultar automáticamente
+- [x] Animaciones de transición entre cuadrantes
 
 **Entregable:** Tablero Eisenhower interactivo con persistencia.
 

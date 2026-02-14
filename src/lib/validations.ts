@@ -31,7 +31,7 @@ export const createBrainDumpSchema = z.object({
 
 export const updateTaskSchema = z.object({
   text: z.string().min(1).max(1000).optional(),
-  quadrant: z.enum(["Q1_DO", "Q2_SCHEDULE", "Q3_DELEGATE", "Q4_DELETE"]).optional(),
+  quadrant: z.enum(["Q1_DO", "Q2_SCHEDULE", "Q3_DELEGATE", "Q4_DELETE"]).nullable().optional(),
   isPareto: z.boolean().optional(),
   status: z.enum(["PENDING", "IN_PROGRESS", "DONE", "HIDDEN"]).optional(),
   sortOrder: z.number().int().min(0).optional(),
@@ -43,7 +43,7 @@ export const reorderTasksSchema = z.object({
     z.object({
       id: z.string(),
       sortOrder: z.number().int().min(0),
-      quadrant: z.enum(["Q1_DO", "Q2_SCHEDULE", "Q3_DELEGATE", "Q4_DELETE"]).optional(),
+      quadrant: z.enum(["Q1_DO", "Q2_SCHEDULE", "Q3_DELEGATE", "Q4_DELETE"]).nullable().optional(),
     }),
   ),
 });
