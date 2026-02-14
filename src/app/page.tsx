@@ -839,7 +839,7 @@ export default function LandingPage() {
                   variant={plan.popular ? "default" : "outline"}
                   size="lg"
                 >
-                  <Link href="/signup">
+                  <Link href={plan.popular ? "/signup?plan=PRO" : "/signup?plan=BASIC"}>
                     {plan.popular ? "Elegir Pro" : "Elegir Básico"}
                   </Link>
                 </Button>

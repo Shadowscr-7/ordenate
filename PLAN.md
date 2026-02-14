@@ -328,24 +328,47 @@ User ──┬── Workspace ──┬── BrainDump ──── TaskLine
 
 ---
 
-## FASE 5 — Stripe Billing
+## FASE 5 — Stripe Billing ✅ COMPLETADA
 
 **Objetivo:** Sistema de suscripciones con pagos recurrentes.
 
-- [ ] Configurar Stripe: productos, precios (Basic, Pro)
-- [ ] Página de Pricing en landing
-- [ ] Stripe Checkout Session → redirect a pago
-- [ ] Webhook handler: `POST /api/webhooks/stripe`
+- [x] Configurar Stripe: productos, precios (Basic, Pro)
+- [x] Página de Pricing en landing (botones linkan a /signup?plan=BASIC|PRO)
+- [x] Stripe Checkout Session → redirect a pago (`POST /api/stripe/checkout`)
+- [x] Webhook handler: `POST /api/webhooks/stripe`
   - `checkout.session.completed` → crear Subscription
   - `invoice.paid` → renovar
+  - `invoice.payment_failed` → marcar PAST_DUE
+  - `customer.subscription.updated` → sincronizar plan/status/período
   - `customer.subscription.deleted` → cancelar
-- [ ] Modelo Subscription en Prisma (plan, status, stripeId, currentPeriodEnd)
-- [ ] Middleware de feature gating (verificar plan antes de features Pro)
-- [ ] Portal de cliente Stripe (gestionar suscripción)
-- [ ] Página Settings con info de suscripción actual
-- [ ] Lógica de límites para plan Basic (ej: max 10 dumps/mes)
+- [x] Modelo Subscription en Prisma (plan, status, stripeId, currentPeriodEnd) — ya existía
+- [x] Feature gating (`src/lib/plan-gate.ts`):
+  - `canCreateDump()` — límite mensual (10 Basic, ∞ Pro)
+  - `hasProAccess()` — verificar plan Pro activo
+  - Gating aplicado en POST /api/braindump, /api/ai/ocr, /api/ai/normalize
+- [x] Portal de cliente Stripe (`POST /api/stripe/portal`)
+- [x] Página Settings con BillingPanel (plan, uso, renovación, botones checkout/portal)
+- [x] Lógica de límites para plan Basic (máx 10 dumps/mes, mostrado en dashboard)
+- [x] Image/OCR tab bloqueado para Basic en New Dump page
+- [x] API de suscripción (`GET /api/stripe/subscription`) — info del plan + uso mensual
 
-**Entregable:** Pagos funcionales con control de acceso por plan.
+**Archivos creados:**
+- `src/lib/stripe.ts` — cliente singleton + STRIPE_PRICES
+- `src/lib/plan-gate.ts` — helpers de gating
+- `src/app/api/webhooks/stripe/route.ts` — webhook handler (5 eventos)
+- `src/app/api/stripe/checkout/route.ts` — crear checkout session
+- `src/app/api/stripe/portal/route.ts` — crear portal session
+- `src/app/api/stripe/subscription/route.ts` — info de suscripción
+- `src/components/billing/billing-panel.tsx` — panel de billing
+
+**Env vars necesarias (crear en Stripe Dashboard → copiar):**
+- `STRIPE_SECRET_KEY` — clave secreta de Stripe
+- `STRIPE_WEBHOOK_SECRET` — secreto del webhook endpoint
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — clave pública
+- `STRIPE_PRICE_BASIC` — price ID del producto Basic
+- `STRIPE_PRICE_PRO` — price ID del producto Pro
+
+**Entregable:** ✅ Pagos funcionales con control de acceso por plan.
 
 ---
 
@@ -413,7 +436,7 @@ FASE 4  ━━━━━━━━━━━━━━━━━━━━━━━  P
    ↓
 FASE 4.5━━━━━━━━━━━━━━━━━━━━━━━  Atributos Enriquecidos + Eisenhower v2
    ↓
-FASE 5  ━━━━━━━━━━━━━━━━━━━━━━━  Stripe Billing
+FASE 5  ━━━━━━━━━━━━━━━━━━━━━━━  Stripe Billing ✅
    ↓
 FASE 6  ━━━━━━━━━━━━━━━━━━━━━━━  Bots mensajería
    ↓

@@ -12,11 +12,13 @@ import { getSession } from "@/lib/auth/actions";
 import { createBrainDumpSchema } from "@/lib/validations";
 import {
   apiSuccess,
+  apiError,
   apiUnauthorized,
   apiValidationError,
   apiServerError,
 } from "@/lib/api-response";
 import { normalizeText, classifyTasks } from "@/lib/ai";
+import { canCreateDump } from "@/lib/plan-gate";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +47,12 @@ export async function POST(request: NextRequest) {
     }
 
     const workspaceId = user.memberships[0].workspace.id;
+
+    // ── Plan limit check ───────────────────────────────────
+    const gate = await canCreateDump(workspaceId);
+    if (!gate.allowed) {
+      return apiError(gate.reason ?? "Límite de plan alcanzado", 403);
+    }
 
     let taskLines: string[];
     let suggestedTitle = title || null;

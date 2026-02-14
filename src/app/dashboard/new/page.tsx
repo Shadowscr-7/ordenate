@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useTransition, useRef, useCallback } from "react";
+import { useState, useTransition, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Camera,
@@ -17,6 +17,7 @@ import {
   ImageIcon,
   Lightbulb,
   Loader2,
+  Lock,
   Send,
   Sparkles,
   Type,
@@ -84,6 +85,15 @@ export default function NewDumpPage() {
 
   // Processing state
   const [processingStep, setProcessingStep] = useState<ProcessingStep>("idle");
+
+  // Plan info (for gating Pro features like OCR)
+  const [isPro, setIsPro] = useState(true); // default true to avoid flash
+  useEffect(() => {
+    fetch("/api/stripe/subscription")
+      .then((r) => r.json())
+      .then((d) => setIsPro(d.data?.plan === "PRO"))
+      .catch(() => setIsPro(false));
+  }, []);
 
   const lineCount = rawText
     .split("\n")
@@ -257,10 +267,12 @@ export default function NewDumpPage() {
           size="sm"
           className="gap-2"
           onClick={() => setInputMode("image")}
-          disabled={isProcessing}
+          disabled={isProcessing || !isPro}
+          title={!isPro ? "Función Pro — Actualiza tu plan" : undefined}
         >
           <Camera className="h-4 w-4" />
           Imagen
+          {!isPro && <Lock className="h-3 w-3 text-muted-foreground" />}
         </Button>
       </div>
 

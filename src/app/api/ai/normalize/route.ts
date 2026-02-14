@@ -4,8 +4,10 @@
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/actions";
 import { normalizeText } from "@/lib/ai";
+import { hasProAccess } from "@/lib/plan-gate";
 import {
   apiSuccess,
   apiUnauthorized,
@@ -22,6 +24,16 @@ export async function POST(request: NextRequest) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
+
+    // Pro-only feature
+    const user = await db.user.findUnique({
+      where: { authId: authUser.id },
+      include: { memberships: { take: 1 } },
+    });
+    const workspaceId = user?.memberships[0]?.workspaceId;
+    if (!workspaceId) return apiUnauthorized();
+    const gate = await hasProAccess(workspaceId);
+    if (!gate.allowed) return apiError(gate.reason ?? "Requiere plan Pro", 403);
 
     const body = await request.json();
     const parsed = schema.safeParse(body);

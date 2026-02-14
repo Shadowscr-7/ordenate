@@ -83,6 +83,16 @@ export default async function DashboardPage() {
     ? await db.brainDump.count({ where: { workspaceId } })
     : 0;
 
+  // Monthly dump count for Basic plan limit display
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const dumpsThisMonth = workspaceId
+    ? await db.brainDump.count({
+        where: { workspaceId, createdAt: { gte: monthStart } },
+      })
+    : 0;
+  const monthlyLimit = isPro ? null : 10;
+
   return (
     <div className="animate-fade-in space-y-6">
       {/* Welcome + New Dump CTA */}
@@ -148,7 +158,7 @@ export default async function DashboardPage() {
 
       {/* Quick Stats — inline row */}
       {totalDumps > 0 && (
-        <div className="animate-fade-in-up stagger-2 grid grid-cols-3 gap-3">
+        <div className={`animate-fade-in-up stagger-2 grid gap-3 ${monthlyLimit !== null ? "grid-cols-4" : "grid-cols-3"}`}>
           <Card>
             <CardContent className="py-2 text-center">
               <p className="text-lg font-bold">{totalDumps}</p>
@@ -167,6 +177,16 @@ export default async function DashboardPage() {
               <p className="text-[11px] text-muted-foreground">Completadas</p>
             </CardContent>
           </Card>
+          {monthlyLimit !== null && (
+            <Card className={dumpsThisMonth >= monthlyLimit ? "border-amber-500/50" : ""}>
+              <CardContent className="py-2 text-center">
+                <p className={`text-lg font-bold ${dumpsThisMonth >= monthlyLimit ? "text-amber-500" : ""}`}>
+                  {dumpsThisMonth}/{monthlyLimit}
+                </p>
+                <p className="text-[11px] text-muted-foreground">Dumps / mes</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
