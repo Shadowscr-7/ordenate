@@ -12,7 +12,7 @@ import {
 } from "@/lib/api-response";
 
 // GET /api/eisenhower — get all non-hidden tasks grouped for the board
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
@@ -24,10 +24,15 @@ export async function GET(_request: NextRequest) {
     const workspaceId = user?.memberships[0]?.workspaceId;
     if (!workspaceId) return apiUnauthorized();
 
+    // Optional filter by brain dump
+    const { searchParams } = new URL(request.url);
+    const brainDumpId = searchParams.get("brainDumpId");
+
     const tasks = await db.task.findMany({
       where: {
         brainDump: { workspaceId },
         status: { not: "HIDDEN" },
+        ...(brainDumpId ? { brainDumpId } : {}),
       },
       orderBy: { sortOrder: "asc" },
       include: {

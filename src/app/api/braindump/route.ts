@@ -1,9 +1,11 @@
 // ============================================================
-// Brain Dump API — Create new brain dump + parse into tasks
+// Brain Dump API — Create and list brain dumps
 // ============================================================
-// Supports two modes:
-//   1. Manual — split rawText by lines (default)
-//   2. AI     — normalize with LLM + classify Eisenhower
+// GET  /api/braindump?limit=20  → List brain dumps
+// POST /api/braindump            → Create new brain dump + parse into tasks
+//   Supports two modes:
+//     1. Manual — split rawText by lines (default)
+//     2. AI     — normalize with LLM + classify Eisenhower
 // ============================================================
 
 import { NextRequest } from "next/server";
@@ -20,6 +22,51 @@ import {
 import { normalizeText, classifyTasks } from "@/lib/ai";
 import { canCreateDump } from "@/lib/plan-gate";
 import { apiLimiter, getClientIp } from "@/lib/rate-limit";
+
+// ─── GET: List brain dumps ───────────────────────────────────
+
+export async function GET(request: NextRequest) {
+  try {
+    const authUser = await getSession();
+    if (!authUser) return apiUnauthorized();
+
+    const user = await db.user.findUnique({
+      where: { authId: authUser.id },
+      include: {
+        memberships: {
+          include: { workspace: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!user || !user.memberships[0]) {
+      return apiUnauthorized();
+    }
+
+    const workspaceId = user.memberships[0].workspace.id;
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+
+    const dumps = await db.brainDump.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(limit, 100),
+      include: {
+        _count: {
+          select: { tasks: true },
+        },
+      },
+    });
+
+    return apiSuccess({ dumps, count: dumps.length });
+  } catch (error) {
+    console.error("[Brain Dump API] GET error:", error);
+    return apiServerError(error);
+  }
+}
+
+// ─── POST: Create brain dump ─────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {

@@ -30,40 +30,49 @@ export async function extractTextFromImage(
 ): Promise<OCRResult> {
   const openai = getOpenAI();
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.1,
-    max_tokens: 2000,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: 'Extrae todo el texto visible de esta imagen. Responde con JSON: { "text": "texto extraído" }',
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${mimeType};base64,${base64Image}`,
-              detail: "high",
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.1,
+      max_tokens: 2000,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: 'Extrae todo el texto visible de esta imagen. Responde con JSON: { "text": "texto extraído" }',
             },
-          },
-        ],
-      },
-    ],
-  });
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${base64Image}`,
+                detail: "high",
+              },
+            },
+          ],
+        },
+      ],
+    });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("OpenAI returned empty response");
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      console.error("[OCR] OpenAI returned empty response", { response });
+      throw new Error("OpenAI returned empty response");
+    }
+
+    const parsed = JSON.parse(content);
+
+    return {
+      text: typeof parsed.text === "string" ? parsed.text : "",
+    };
+  } catch (error) {
+    console.error("[OCR] Error extracting text from image:", error);
+    if (error instanceof Error) {
+      throw new Error(`OCR failed: ${error.message}`);
+    }
+    throw error;
   }
-
-  const parsed = JSON.parse(content);
-
-  return {
-    text: typeof parsed.text === "string" ? parsed.text : "",
-  };
 }

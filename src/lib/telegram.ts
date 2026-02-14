@@ -29,6 +29,20 @@ export interface TelegramUpdate {
       height: number;
       file_size?: number;
     }>;
+    voice?: {
+      file_id: string;
+      file_unique_id: string;
+      duration: number;
+      mime_type?: string;
+      file_size?: number;
+    };
+    audio?: {
+      file_id: string;
+      file_unique_id: string;
+      duration: number;
+      mime_type?: string;
+      file_size?: number;
+    };
     caption?: string;
   };
   callback_query?: {
@@ -109,6 +123,27 @@ export async function answerCallbackQuery(
     body: JSON.stringify({
       callback_query_id: callbackQueryId,
       text,
+    }),
+  });
+  return res.json();
+}
+
+/**
+ * Edit an existing message
+ */
+export async function editMessageText(
+  chatId: number | string,
+  messageId: number,
+  text: string,
+) {
+  const res = await fetch(`${TELEGRAM_API}/editMessageText`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      text,
+      parse_mode: "HTML",
     }),
   });
   return res.json();

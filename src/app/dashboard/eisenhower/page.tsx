@@ -5,6 +5,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useTransition, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -51,6 +52,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import {
   Tooltip,
   TooltipContent,
@@ -467,6 +469,7 @@ function DroppableColumn({
 // ─── Main Board Component ───────────────────────────────────
 
 export default function EisenhowerPage() {
+  const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
@@ -476,6 +479,8 @@ export default function EisenhowerPage() {
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
   const [editText, setEditText] = useState("");
   const [classifying, setClassifying] = useState(false);
+  const [brainDumpFilter, setBrainDumpFilter] = useState<string | null>(null);
+  const [brainDumps, setBrainDumps] = useState<Array<{ id: string; title: string | null }>>([]);
   const [isPending, startTransition] = useTransition();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -484,11 +489,38 @@ export default function EisenhowerPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  // Check for dumpId in URL
+  useEffect(() => {
+    const dumpId = searchParams.get("dumpId");
+    if (dumpId) {
+      setBrainDumpFilter(dumpId);
+    }
+  }, [searchParams]);
+
+  // Fetch brain dumps for filter
+  useEffect(() => {
+    const fetchDumps = async () => {
+      try {
+        const res = await fetch("/api/braindump");
+        if (!res.ok) return;
+        const { data } = await res.json();
+        setBrainDumps(data?.dumps || []);
+      } catch (err) {
+        console.error("Error loading dumps:", err);
+      }
+    };
+    fetchDumps();
+  }, []);
+
   // ── Fetch ──
 
   const fetchTasks = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/eisenhower");
+      const url = brainDumpFilter 
+        ? `/api/eisenhower?brainDumpId=${brainDumpFilter}`
+        : "/api/eisenhower";
+      const res = await fetch(url);
       if (!res.ok) return;
       const { data } = await res.json();
       setTasks(data);
@@ -497,7 +529,7 @@ export default function EisenhowerPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [brainDumpFilter]);
 
   useEffect(() => {
     fetchTasks();
@@ -760,6 +792,37 @@ export default function EisenhowerPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <select
+                value={brainDumpFilter || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setBrainDumpFilter(value || null);
+                }}
+                disabled={loading}
+                className="h-7 rounded-md border border-input bg-background px-2 text-xs relative z-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">Todos los Brain Dumps</option>
+                {brainDumps.map((dump) => (
+                  <option key={dump.id} value={dump.id}>
+                    {dump.title || "Sin título"}
+                  </option>
+                ))}
+              </select>
+              {loading && (
+                <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
+              )}
+            </div>
+            {brainDumpFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setBrainDumpFilter(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -841,6 +904,9 @@ export default function EisenhowerPage() {
             </div>
           </div>
         )}
+
+        {/* Loading overlay */}
+        {loading && <LoadingOverlay message="Cargando tareas..." />}
 
         {/* DnD Context */}
         <DndContext

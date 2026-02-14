@@ -8,10 +8,10 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Brain,
   History,
   Home,
   Kanban,
+  ListTodo,
   Plus,
   Settings,
   Target,
@@ -33,6 +33,11 @@ const NAV_ITEMS = [
     label: "Dashboard",
     href: ROUTES.DASHBOARD,
     icon: Home,
+  },
+  {
+    label: "Backlog",
+    href: ROUTES.BACKLOG,
+    icon: ListTodo,
   },
   {
     label: "Tablero Eisenhower",

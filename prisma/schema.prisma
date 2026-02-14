@@ -46,6 +46,7 @@ model Workspace {
   // Relations
   members      WorkspaceMember[]
   brainDumps   BrainDump[]
+  backlogTasks BacklogTask[]
   categories   Category[]
   subscription Subscription?
   auditLogs    AuditLog[]
@@ -159,6 +160,41 @@ model Category {
 
   @@unique([workspaceId, name])
   @@map("categories")
+}
+
+// ─── BACKLOG TASKS ──────────────────────────────────────────
+// Tasks that are not yet assigned to a BrainDump (Jira-style backlog)
+
+model BacklogTask {
+  id          String       @id @default(cuid())
+  text        String       @db.Text
+  source      BacklogSource @default(MANUAL)
+  sortOrder   Int          @default(0) @map("sort_order")
+  quadrant    EisenhowerQuad?
+  status      BacklogStatus @default(PENDING)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  workspaceId String       @map("workspace_id")
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([workspaceId, status])
+  @@map("backlog_tasks")
+}
+
+enum BacklogSource {
+  MANUAL
+  TELEGRAM
+  WEB
+  IMPORT
+}
+
+enum BacklogStatus {
+  PENDING       // En el backlog, sin asignar
+  ASSIGNED      // Se movió a un brain dump
+  ARCHIVED      // Usuario la descartó
 }
 
 // ─── TASKS (Lines) ──────────────────────────────────────────

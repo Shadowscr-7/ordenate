@@ -145,6 +145,7 @@ export default function BrainDumpDetailPage() {
   const [showHidden, setShowHidden] = useState(false);
   const [isClassifying, setIsClassifying] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [isCreatingFromPending, setIsCreatingFromPending] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fetchDump = useCallback(async () => {
@@ -314,6 +315,46 @@ export default function BrainDumpDetailPage() {
     }
   }
 
+  async function createFromPending() {
+    if (!dump) return;
+    const pendingTasks = dump.tasks.filter(
+      (t) => t.status === "PENDING",
+    );
+    if (pendingTasks.length === 0) {
+      alert("No hay tareas pendientes en este dump");
+      return;
+    }
+
+    const title = prompt(
+      `Crear nuevo dump con ${pendingTasks.length} tareas pendientes.\n\nTítulo:`,
+      `Continuar: ${dump.title || "Brain Dump"}`,
+    );
+    if (!title) return;
+
+    setIsCreatingFromPending(true);
+    try {
+      const res = await fetch("/api/braindump/from-pending", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          sourceDumpIds: [id],
+        }),
+      });
+      if (!res.ok) {
+        alert("Error al crear el nuevo dump");
+        return;
+      }
+      const { data } = await res.json();
+      // Navigate to new dump
+      router.push(`/dashboard/dump/${data.id}`);
+    } catch {
+      alert("Error al crear el nuevo dump");
+    } finally {
+      setIsCreatingFromPending(false);
+    }
+  }
+
   function updateTaskField(taskId: string, field: string, value: unknown) {
     // Optimistic — update UI instantly
     updateLocalTask(taskId, { [field]: value } as Partial<Task>);
@@ -439,6 +480,25 @@ export default function BrainDumpDetailPage() {
                   {t.label}
                 </Button>
               ))}
+            </div>
+          )}
+          {/* Create from pending button */}
+          {pendingCount > 0 && (
+            <div className="flex flex-wrap gap-2 pl-10 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                onClick={createFromPending}
+                disabled={isCreatingFromPending}
+              >
+                {isCreatingFromPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Plus className="h-3.5 w-3.5" />
+                )}
+                Crear dump con {pendingCount} pendiente{pendingCount !== 1 ? "s" : ""}
+              </Button>
             </div>
           )}
         </div>

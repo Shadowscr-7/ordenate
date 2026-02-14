@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   Brain,
-  FileText,
+  LayoutGrid,
   Plus,
   Sparkles,
 } from "lucide-react";
@@ -16,13 +16,7 @@ import { db } from "@/lib/db";
 import { ROUTES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TelegramLink } from "@/components/dashboard/telegram-link";
 import { WelcomeDialog } from "@/components/dashboard/welcome-dialog";
 
@@ -212,31 +206,44 @@ export default async function DashboardPage() {
                   const doneCount = dump.tasks.length;
                   const totalCount = dump._count.tasks;
                   return (
-                    <Link
+                    <div
                       key={dump.id}
-                      href={`/dashboard/dump/${dump.id}`}
                       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50"
                     >
-                      <span className="text-base leading-none">
-                        {SOURCE_ICON[dump.source] ?? "📝"}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                        {dump.title || "Brain Dump"}
-                      </span>
-                      <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-                        {totalCount} {totalCount === 1 ? "tarea" : "tareas"}
-                        {doneCount > 0 && ` · ${doneCount} ✓`}
-                      </span>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">
-                        {new Date(dump.createdAt).toLocaleDateString("es-ES", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
-                      <Badge variant={statusInfo.variant} className="text-[10px] px-1.5 py-0">
-                        {statusInfo.label}
-                      </Badge>
-                    </Link>
+                      <Link
+                        href={`/dashboard/dump/${dump.id}`}
+                        className="flex items-center gap-3 flex-1 min-w-0"
+                      >
+                        <span className="text-base leading-none">
+                          {SOURCE_ICON[dump.source] ?? "📝"}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {dump.title || "Brain Dump"}
+                        </span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                          {totalCount} {totalCount === 1 ? "tarea" : "tareas"}
+                          {doneCount > 0 && ` · ${doneCount} ✓`}
+                        </span>
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {new Date(dump.createdAt).toLocaleDateString("es-ES", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </span>
+                        <Badge variant={statusInfo.variant} className="text-[10px] px-1.5 py-0">
+                          {statusInfo.label}
+                        </Badge>
+                      </Link>
+                      <Link
+                        href={`${ROUTES.EISENHOWER}?dumpId=${dump.id}`}
+                        className="shrink-0"
+                        title="Ver en Eisenhower"
+                      >
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <LayoutGrid className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
