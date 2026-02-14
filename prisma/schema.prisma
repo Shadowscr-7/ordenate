@@ -1,0 +1,202 @@
+// ============================================================
+// BrainDump SaaS — Prisma Schema
+// ============================================================
+// Full data model for the prioritization system.
+// Uses Supabase Postgres with connection pooling.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── USERS & WORKSPACES ─────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  avatarUrl      String?  @map("avatar_url")
+  authId         String   @unique @map("auth_id") // Supabase Auth UID
+  telegramChatId String?  @unique @map("telegram_chat_id")
+  telegramLinkedAt DateTime? @map("telegram_linked_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  memberships WorkspaceMember[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  members      WorkspaceMember[]
+  brainDumps   BrainDump[]
+  subscription Subscription?
+  auditLogs    AuditLog[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id        String        @id @default(cuid())
+  role      WorkspaceRole @default(OWNER)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@map("workspace_members")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ─── SUBSCRIPTIONS ──────────────────────────────────────────
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  plan               SubscriptionPlan   @default(BASIC)
+  status             SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId   String?            @unique @map("stripe_customer_id")
+  stripeSubId        String?            @unique @map("stripe_sub_id")
+  stripePriceId      String?            @map("stripe_price_id")
+  currentPeriodStart DateTime?          @map("current_period_start")
+  currentPeriodEnd   DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd  Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  workspaceId String    @unique @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  INCOMPLETE
+}
+
+// ─── BRAIN DUMPS ────────────────────────────────────────────
+
+model BrainDump {
+  id        String          @id @default(cuid())
+  title     String?
+  rawText   String?         @map("raw_text") @db.Text
+  imageUrl  String?         @map("image_url")
+  source    BrainDumpSource @default(WEB)
+  status    BrainDumpStatus @default(DRAFT)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@map("brain_dumps")
+}
+
+enum BrainDumpSource {
+  WEB
+  IMAGE
+  TELEGRAM
+  WHATSAPP
+}
+
+enum BrainDumpStatus {
+  DRAFT
+  PROCESSING
+  PROCESSED
+  ERROR
+  ARCHIVED
+}
+
+// ─── TASKS (Lines) ──────────────────────────────────────────
+
+model Task {
+  id          String          @id @default(cuid())
+  text        String          @db.Text
+  sortOrder   Int             @default(0) @map("sort_order")
+  quadrant    EisenhowerQuad?
+  isPareto    Boolean         @default(false) @map("is_pareto")
+  status      TaskStatus      @default(PENDING)
+  dueDate     DateTime?       @map("due_date")
+  calendarId  String?         @map("calendar_event_id")
+  completedAt DateTime?       @map("completed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  brainDumpId String    @map("brain_dump_id")
+  brainDump   BrainDump @relation(fields: [brainDumpId], references: [id], onDelete: Cascade)
+
+  @@index([brainDumpId, sortOrder])
+  @@map("tasks")
+}
+
+enum EisenhowerQuad {
+  Q1_DO       // Urgent + Important
+  Q2_SCHEDULE // Not Urgent + Important
+  Q3_DELEGATE // Urgent + Not Important
+  Q4_DELETE   // Not Urgent + Not Important
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  HIDDEN
+}
+
+// ─── AUDIT LOG ──────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // e.g. "task.created", "braindump.processed"
+  entity    String   // e.g. "Task", "BrainDump"
+  entityId  String   @map("entity_id")
+  metadata  Json?    // Additional context
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}

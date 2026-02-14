@@ -1,0 +1,37 @@
+// ============================================================
+// Health Check API — Verifies system status
+// ============================================================
+
+import { NextResponse } from "next/server";
+
+import { db } from "@/lib/db";
+
+export async function GET() {
+  try {
+    // Test database connection
+    await db.$queryRaw`SELECT 1`;
+
+    return NextResponse.json(
+      {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        services: {
+          database: "connected",
+        },
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        status: "error",
+        timestamp: new Date().toISOString(),
+        services: {
+          database: "disconnected",
+        },
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 503 },
+    );
+  }
+}
