@@ -18,7 +18,6 @@ import {
   Clock,
   Eye,
   EyeOff,
-  GripVertical,
   Loader2,
   Pencil,
   Plus,
@@ -26,7 +25,6 @@ import {
   Sparkles,
   Star,
   Tag,
-  Target,
   Trash2,
   X,
 } from "lucide-react";
@@ -186,49 +184,54 @@ export default function BrainDumpDetailPage() {
     setEditText("");
   }
 
+  function updateLocalTask(taskId: string, updates: Partial<Task>) {
+    setDump((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tasks: prev.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+      };
+    });
+  }
+
   function saveEditTask(taskId: string) {
     if (!editText.trim()) return;
-    startTransition(async () => {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: editText.trim() }),
-      });
-      setEditingTaskId(null);
-      setEditText("");
-      fetchDump();
+    const text = editText.trim();
+    updateLocalTask(taskId, { text });
+    setEditingTaskId(null);
+    setEditText("");
+    fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
     });
   }
 
   function deleteTask(taskId: string) {
-    startTransition(async () => {
-      await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-      fetchDump();
+    setDump((prev) => {
+      if (!prev) return prev;
+      return { ...prev, tasks: prev.tasks.filter((t) => t.id !== taskId) };
     });
+    fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
   }
 
   function toggleTaskDone(task: Task) {
-    // Cycle: PENDING → DONE → HIDDEN → PENDING
     const nextStatus =
       task.status === "PENDING" ? "DONE" : task.status === "DONE" ? "HIDDEN" : "PENDING";
-    startTransition(async () => {
-      await fetch(`/api/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      fetchDump();
+    updateLocalTask(task.id, { status: nextStatus });
+    fetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus }),
     });
   }
 
   function setTaskStatus(taskId: string, status: string) {
-    startTransition(async () => {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      fetchDump();
+    updateLocalTask(taskId, { status });
+    fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
     });
   }
 
@@ -312,13 +315,13 @@ export default function BrainDumpDetailPage() {
   }
 
   function updateTaskField(taskId: string, field: string, value: unknown) {
-    startTransition(async () => {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
-      fetchDump();
+    // Optimistic — update UI instantly
+    updateLocalTask(taskId, { [field]: value } as Partial<Task>);
+    // Fire-and-forget API call
+    fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
     });
   }
 
@@ -335,13 +338,17 @@ export default function BrainDumpDetailPage() {
       });
       if (!res.ok) return;
       const { data } = await res.json();
-      // Refresh categories list
-      const catRes = await fetch("/api/categories");
-      if (catRes.ok) {
-        const catData = await catRes.json();
-        setCategories(catData.data ?? []);
-      }
-      updateTaskField(taskId, "categoryId", data.id);
+      // Add to local categories list immediately
+      setCategories((prev) =>
+        prev.some((c) => c.id === data.id) ? prev : [...prev, data].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      // Optimistically assign
+      updateLocalTask(taskId, { categoryId: data.id, category: { id: data.id, name: data.name } });
+      fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId: data.id }),
+      });
     } catch {
       // ignore
     }
@@ -653,7 +660,6 @@ export default function BrainDumpDetailPage() {
                   <TaskDetailPanel
                     task={task}
                     categories={categories}
-                    isPending={isPending}
                     onUpdate={updateTaskField}
                     onCategoryAssign={createOrAssignCategory}
                   />
@@ -738,13 +744,11 @@ export default function BrainDumpDetailPage() {
 function TaskDetailPanel({
   task,
   categories,
-  isPending,
   onUpdate,
   onCategoryAssign,
 }: {
   task: Task;
   categories: Category[];
-  isPending: boolean;
   onUpdate: (taskId: string, field: string, value: unknown) => void;
   onCategoryAssign: (taskId: string, name: string) => void;
 }) {
@@ -797,7 +801,6 @@ function TaskDetailPanel({
                     onUpdate(task.id, "categoryId", e.target.value || null);
                   }
                 }}
-                disabled={isPending}
               >
                 <option value="">Sin categoría</option>
                 {categories.map((c) => (
@@ -819,7 +822,6 @@ function TaskDetailPanel({
               <button
                 key={p}
                 onClick={() => onUpdate(task.id, "priority", task.priority === p ? null : p)}
-                disabled={isPending}
                 className={`flex-1 rounded px-2 py-1 text-[11px] font-bold transition-colors ${
                   task.priority === p
                     ? `${PRIORITY_META[p].bg} text-white`
@@ -845,7 +847,6 @@ function TaskDetailPanel({
               <button
                 key={f}
                 onClick={() => onUpdate(task.id, "feeling", task.feeling === f ? null : f)}
-                disabled={isPending}
                 className={`rounded px-2 py-1 text-[11px] transition-colors text-left ${
                   task.feeling === f
                     ? "bg-primary/10 text-primary ring-1 ring-primary/30"
@@ -869,18 +870,16 @@ function TaskDetailPanel({
               min={1}
               className="h-7 w-16 text-xs"
               placeholder="—"
-              value={task.estimatedValue ?? ""}
-              onChange={(e) => {
+              defaultValue={task.estimatedValue ?? ""}
+              onBlur={(e) => {
                 const val = e.target.value ? parseInt(e.target.value) : null;
-                onUpdate(task.id, "estimatedValue", val);
+                if (val !== task.estimatedValue) onUpdate(task.id, "estimatedValue", val);
               }}
-              disabled={isPending}
             />
             <select
               className="h-7 flex-1 rounded-md border bg-background px-2 text-xs"
               value={task.estimatedUnit ?? ""}
               onChange={(e) => onUpdate(task.id, "estimatedUnit", e.target.value || null)}
-              disabled={isPending}
             >
               <option value="">Unidad</option>
               {units.map((u) => (

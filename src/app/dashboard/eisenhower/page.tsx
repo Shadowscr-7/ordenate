@@ -668,15 +668,15 @@ export default function EisenhowerPage() {
   }
 
   function updateField(taskId: string, field: string, value: unknown) {
+    // Optimistic — instant UI update
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, [field]: value } : t)),
     );
-    startTransition(async () => {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
+    // Fire-and-forget
+    fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
     });
   }
 
