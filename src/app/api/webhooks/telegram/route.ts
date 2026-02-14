@@ -417,7 +417,25 @@ async function handlePhotoMessage(
     
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     const base64 = buffer.toString("base64");
-    const contentType = imgResponse.headers.get("content-type") ?? "image/jpeg";
+    
+    // Ensure we have a valid image MIME type
+    let contentType = imgResponse.headers.get("content-type") ?? "";
+    // Validate and normalize MIME type
+    if (!contentType || !contentType.startsWith("image/")) {
+      // Detect from file signature if possible
+      const signature = buffer.slice(0, 4).toString("hex");
+      if (signature.startsWith("ffd8ff")) {
+        contentType = "image/jpeg";
+      } else if (signature.startsWith("89504e47")) {
+        contentType = "image/png";
+      } else if (signature.startsWith("47494638")) {
+        contentType = "image/gif";
+      } else if (signature.startsWith("52494646") && buffer.slice(8, 12).toString() === "WEBP") {
+        contentType = "image/webp";
+      } else {
+        contentType = "image/jpeg"; // Default fallback
+      }
+    }
 
     // 2. OCR — extract text from image
     const ocr = await extractTextFromImage(base64, contentType);
