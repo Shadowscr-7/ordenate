@@ -164,13 +164,25 @@ async function handleTextMessage(chatId: number, text: string) {
     return;
   }
 
-  // Create the brain dump
+  // Create the brain dump with parsed tasks
+  const lines = text
+    .split(/\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
   const dump = await db.brainDump.create({
     data: {
       rawText: text,
       source: "TELEGRAM",
-      status: "DRAFT",
+      status: "PROCESSED",
       workspaceId: workspace.id,
+      tasks: {
+        create: lines.map((line, index) => ({
+          text: line,
+          sortOrder: index,
+          status: "PENDING",
+        })),
+      },
     },
   });
 
@@ -178,7 +190,8 @@ async function handleTextMessage(chatId: number, text: string) {
     chatId,
     `✅ <b>Brain dump creado</b>\n\n` +
       `📝 "${text.length > 100 ? text.slice(0, 100) + "..." : text}"\n\n` +
-      `Abre la app para clasificarlo con la Matriz Eisenhower y Pareto. 🎯`,
+      `Se crearon <b>${lines.length}</b> ${lines.length === 1 ? "tarea" : "tareas"}.\n` +
+      `Abre la app para clasificarlas con la Matriz Eisenhower y Pareto. 🎯`,
   );
 }
 
