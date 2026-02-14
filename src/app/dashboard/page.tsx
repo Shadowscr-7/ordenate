@@ -121,7 +121,10 @@ export default async function DashboardPage() {
       {/* Telegram Link — Pro feature or upgrade CTA */}
       <div className="animate-fade-in-up stagger-3">
         {isPro ? (
-          <TelegramLink userId={user?.id ?? ""} />
+          <TelegramLink
+            userId={user?.id ?? ""}
+            isLinked={!!user?.telegramChatId}
+          />
         ) : (
           <Card className="border-dashed border-primary/20 bg-gradient-to-r from-primary/5 to-cyan-400/5">
             <CardContent className="flex items-center justify-between py-5">
