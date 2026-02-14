@@ -31,6 +31,26 @@ export interface TelegramUpdate {
     }>;
     caption?: string;
   };
+  callback_query?: {
+    id: string;
+    from: {
+      id: number;
+      is_bot: boolean;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+    };
+    message?: {
+      message_id: number;
+      chat: { id: number; type: string };
+    };
+    data?: string;
+  };
+}
+
+export interface InlineKeyboardButton {
+  text: string;
+  callback_data: string;
 }
 
 /**
@@ -48,6 +68,47 @@ export async function sendMessage(
       chat_id: chatId,
       text,
       parse_mode: options?.parse_mode ?? "HTML",
+    }),
+  });
+  return res.json();
+}
+
+/**
+ * Send a message with an inline keyboard (buttons)
+ */
+export async function sendMessageWithKeyboard(
+  chatId: number | string,
+  text: string,
+  keyboard: InlineKeyboardButton[][],
+) {
+  const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: keyboard,
+      },
+    }),
+  });
+  return res.json();
+}
+
+/**
+ * Answer a callback query (acknowledge button press)
+ */
+export async function answerCallbackQuery(
+  callbackQueryId: string,
+  text?: string,
+) {
+  const res = await fetch(`${TELEGRAM_API}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      callback_query_id: callbackQueryId,
+      text,
     }),
   });
   return res.json();
@@ -78,7 +139,7 @@ export async function setWebhook(url: string): Promise<{ ok: boolean; descriptio
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       url,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "callback_query"],
       secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
     }),
   });
