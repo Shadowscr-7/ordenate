@@ -25,64 +25,117 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
 
   const steps = ONBOARDING_STEPS[context] || [];
 
-  // Add custom styles for hover effects
+  // Add custom styles for enhanced visual experience
   React.useEffect(() => {
     const styleId = 'joyride-custom-styles';
     if (mounted && !document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
+        /* Flecha del tooltip */
         .__floater__arrow polygon {
           fill: hsl(var(--card)) !important;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
+        
+        /* Animación de entrada del tooltip */
+        .react-joyride__tooltip {
+          animation: tourFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes tourFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        
+        /* Efectos de hover en botones */
+        .react-joyride__tooltip button {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
         .react-joyride__tooltip button:hover {
-          transform: translateY(-1px);
+          transform: translateY(-2px);
         }
+        
         .react-joyride__tooltip button:active {
           transform: translateY(0);
         }
-        /* Botón Next/Siguiente con efecto mejorado */
-        .react-joyride__tooltip button[data-action="primary"]:hover {
-          filter: brightness(1.1);
-          box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 4px 8px -2px rgba(0, 0, 0, 0.2);
+        
+        /* Botón Next/Siguiente - Efecto destacado */
+        .react-joyride__tooltip button[data-action="primary"] {
+          position: relative;
+          overflow: hidden;
         }
-        /* Botón Skip con efecto */
+        
+        .react-joyride__tooltip button[data-action="primary"]:hover {
+          filter: brightness(1.15);
+          box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 
+                      0 6px 12px -3px rgba(0, 0, 0, 0.3),
+                      0 0 0 3px hsl(var(--primary) / 0.2);
+        }
+        
+        .react-joyride__tooltip button[data-action="primary"]:active {
+          transform: translateY(0) scale(0.98);
+        }
+        
+        /* Botón Skip - Efecto sutil */
         .react-joyride__tooltip button[data-action="skip"]:hover {
           background-color: hsl(var(--muted));
-          border-color: hsl(var(--primary) / 0.4);
+          border-color: hsl(var(--primary) / 0.5);
+          box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.2);
         }
-        /* Botón Back con efecto */
+        
+        /* Botón Back - Efecto sutil */
         .react-joyride__tooltip button[data-action="back"]:hover {
           background-color: hsl(var(--muted));
+          border-color: hsl(var(--border));
+          box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.2);
         }
-        /* Mejorar el botón de cerrar (X) */
+        
+        /* Botón de cerrar (X) - Diseño mejorado */
         .react-joyride__tooltip button[aria-label="Close"] {
           position: absolute;
-          top: 12px;
-          right: 12px;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          border: 1px solid hsl(var(--border));
-          background-color: hsl(var(--muted) / 0.5);
+          top: 16px;
+          right: 16px;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          border: 1.5px solid hsl(var(--border));
+          background: linear-gradient(135deg, hsl(var(--muted) / 0.8), hsl(var(--muted) / 0.5));
           color: hsl(var(--card-foreground));
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 20px;
-          font-weight: 500;
+          font-size: 22px;
+          font-weight: 600;
           line-height: 1;
-          transition: all 0.2s;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
+          z-index: 10;
         }
+        
         .react-joyride__tooltip button[aria-label="Close"]:hover {
-          background-color: hsl(var(--destructive));
+          background: hsl(var(--destructive));
           border-color: hsl(var(--destructive));
           color: hsl(var(--destructive-foreground));
-          transform: rotate(90deg) scale(1.1);
+          transform: rotate(90deg) scale(1.15);
+          box-shadow: 0 8px 16px -4px rgba(220, 38, 38, 0.4);
         }
+        
         .react-joyride__tooltip button[aria-label="Close"]:active {
-          transform: rotate(90deg) scale(0.95);
+          transform: rotate(90deg) scale(1.0);
+        }
+        
+        /* Progress indicator - Mejorado */
+        .react-joyride__tooltip .react-joyride__tooltip__counter {
+          font-weight: 600;
+          color: hsl(var(--primary));
         }
       `;
       document.head.appendChild(style);
@@ -138,24 +191,27 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
           primaryColor: "hsl(var(--primary))",
           textColor: "hsl(var(--card-foreground))",
           backgroundColor: "hsl(var(--card))",
-          overlayColor: "rgba(0, 0, 0, 0.85)",
+          overlayColor: "rgba(0, 0, 0, 0.88)",
           arrowColor: "hsl(var(--card))",
           zIndex: 10000,
         },
         overlay: {
           mixBlendMode: "normal",
+          backdropFilter: "blur(2px)",
         },
         spotlight: {
-          borderRadius: "8px",
+          borderRadius: "12px",
+          boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.88), 0 0 24px rgba(255, 255, 255, 0.15)",
         },
         tooltip: {
-          borderRadius: "16px",
+          borderRadius: "20px",
           fontSize: "15px",
           padding: "0",
           backgroundColor: "hsl(var(--card))",
           border: "2px solid hsl(var(--border))",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 8px 16px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
-          maxWidth: "440px",
+          boxShadow: "0 32px 64px -16px rgba(0, 0, 0, 0.9), 0 16px 32px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08) inset",
+          maxWidth: "460px",
+          minWidth: "320px",
         },
         tooltipContainer: {
           textAlign: "left",
@@ -164,22 +220,23 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
           display: "none",
         },
         tooltipContent: {
-          padding: "24px",
-          paddingRight: "48px", // Espacio para la X
+          padding: "28px 28px 20px",
+          paddingRight: "56px", // Espacio para la X
           fontSize: "15px",
-          lineHeight: "1.7",
+          lineHeight: "1.65",
           color: "hsl(var(--card-foreground))",
         },
         tooltipFooter: {
           marginTop: "0",
-          padding: "16px 24px 20px",
-          borderTop: "1px solid hsl(var(--border))",
+          padding: "18px 28px 24px",
+          borderTop: "1.5px solid hsl(var(--border))",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: "hsl(var(--muted) / 0.2)",
-          borderBottomLeftRadius: "14px",
-          borderBottomRightRadius: "14px",
+          gap: "12px",
+          backgroundColor: "hsl(var(--muted) / 0.3)",
+          borderBottomLeftRadius: "18px",
+          borderBottomRightRadius: "18px",
         },
         tooltipFooterSpacer: {
           flex: "1",
@@ -187,37 +244,38 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
         buttonNext: {
           backgroundColor: "hsl(var(--primary))",
           color: "hsl(var(--primary-foreground))",
-          borderRadius: "8px",
-          padding: "10px 24px",
+          borderRadius: "10px",
+          padding: "11px 28px",
           fontSize: "14px",
-          fontWeight: "600",
+          fontWeight: "700",
+          letterSpacing: "0.01em",
           border: "none",
           cursor: "pointer",
-          transition: "all 0.2s",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)",
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          boxShadow: "0 4px 12px -2px rgba(0, 0, 0, 0.3), 0 2px 6px -1px rgba(0, 0, 0, 0.2)",
         },
         buttonBack: {
           color: "hsl(var(--card-foreground))",
           marginRight: "8px",
-          padding: "10px 20px",
+          padding: "11px 22px",
           fontSize: "14px",
-          fontWeight: "500",
-          border: "1px solid hsl(var(--border))",
-          backgroundColor: "hsl(var(--muted) / 0.5)",
-          borderRadius: "8px",
+          fontWeight: "600",
+          border: "1.5px solid hsl(var(--border))",
+          backgroundColor: "hsl(var(--muted) / 0.6)",
+          borderRadius: "10px",
           cursor: "pointer",
-          transition: "all 0.2s",
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         },
         buttonSkip: {
           color: "hsl(var(--card-foreground))",
           fontSize: "13px",
-          fontWeight: "500",
-          border: "1px solid hsl(var(--border))",
+          fontWeight: "600",
+          border: "1.5px solid hsl(var(--border))",
           backgroundColor: "hsl(var(--muted) / 0.5)",
-          borderRadius: "6px",
-          padding: "6px 12px",
+          borderRadius: "8px",
+          padding: "7px 14px",
           cursor: "pointer",
-          transition: "all 0.2s",
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         },
         buttonClose: {
           display: "none", // Ocultamos el estilo por defecto, usamos el CSS custom
