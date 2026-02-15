@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -39,6 +39,7 @@ interface BrainDump {
 
 export default function BacklogPage() {
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [tasks, setTasks] = useState<BacklogTask[]>([]);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -161,6 +162,8 @@ export default function BacklogPage() {
       toast.success("Tarea creada");
       setNewTaskText("");
       fetchBacklog();
+      // Mantener foco en el input para seguir agregando tareas
+      setTimeout(() => inputRef.current?.focus(), 0);
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error("Error al crear tarea");
@@ -284,6 +287,7 @@ export default function BacklogPage() {
       <Card className="bg-card mb-6 p-3" data-tour="create-task">
         <div className="flex gap-2">
           <Input
+            ref={inputRef}
             placeholder="Escribe una tarea y presiona Enter..."
             value={newTaskText}
             onChange={(e) => setNewTaskText(e.target.value)}

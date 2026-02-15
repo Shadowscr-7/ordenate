@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { type EisenhowerQuadrant, QUADRANT_META } from "@/types";
 import {
@@ -19,10 +20,12 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Filter,
   Loader2,
   Sparkles,
   Star,
   Target,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -47,21 +50,55 @@ interface TaskItem {
   brainDump: { id: string; title: string | null };
 }
 
-// ─── Component ──────────────────────────────────────────────
+interface BrainDumpItem {
+  id: string;
+  title: string | null;
+}
+
+// ─── Component ──────────────────────────────────────
 
 export default function ParetoPage() {
+  const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [hideDone, setHideDone] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [brainDumpFilter, setBrainDumpFilter] = useState<string | null>(null);
+  const [brainDumps, setBrainDumps] = useState<BrainDumpItem[]>([]);
+
+  // Check for dumpId in URL
+  useEffect(() => {
+    const dumpId = searchParams.get("dumpId");
+    if (dumpId) {
+      setBrainDumpFilter(dumpId);
+    }
+  }, [searchParams]);
+
+  // Fetch brain dumps for filter
+  useEffect(() => {
+    const fetchDumps = async () => {
+      try {
+        const res = await fetch("/api/braindump");
+        if (!res.ok) return;
+        const { data } = await res.json();
+        setBrainDumps(data?.dumps || []);
+      } catch (err) {
+        console.error("Error loading dumps:", err);
+      }
+    };
+    fetchDumps();
+  }, []);
 
   // ── Fetch ──
 
   const fetchTasks = useCallback(async () => {
     try {
-      const res = await fetch("/api/pareto");
+      const url = brainDumpFilter
+        ? `/api/pareto?brainDumpId=${brainDumpFilter}`
+        : "/api/pareto";
+      const res = await fetch(url);
       if (!res.ok) return;
       const { data } = await res.json();
       setTasks(data);
@@ -70,7 +107,7 @@ export default function ParetoPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [brainDumpFilter]);
 
   useEffect(() => {
     fetchTasks();
@@ -191,6 +228,38 @@ export default function ParetoPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <select
+                value={brainDumpFilter || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setBrainDumpFilter(value || null);
+                }}
+                disabled={loading}
+                className="border-input bg-background relative z-50 h-7 rounded-md border px-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Todos los Brain Dumps</option>
+                {brainDumps.map((dump) => (
+                  <option key={dump.id} value={dump.id}>
+                    {dump.title || "Sin título"}
+                  </option>
+                ))}
+              </select>
+              {loading && (
+                <Loader2 className="text-muted-foreground pointer-events-none absolute top-1/2 right-2 h-3 w-3 -translate-y-1/2 animate-spin" />
+              )}
+            </div>
+            {brainDumpFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2"
+                onClick={() => setBrainDumpFilter(null)}
+                title="Limpiar filtro"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

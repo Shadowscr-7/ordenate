@@ -9,15 +9,25 @@
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
 
-import { extractTextFromImage, normalizeText, transcribeAudio } from "@/lib/ai";
+import { extractTextFromImage, transcribeAudio } from "@/lib/ai";
 import { db } from "@/lib/db";
 import { hasProAccess } from "@/lib/plan-gate";
 import {
   type TelegramUpdate,
+  answerCallbackQuery,
   extractLinkCode,
   getFileUrl,
   sendMessage,
+  sendMessageWithKeyboard,
 } from "@/lib/telegram";
+import {
+  clearPendingSession,
+  getPendingSession,
+  setPendingSession,
+} from "@/lib/telegram-sessions";
+
+// Threshold: when image OCR extracts this many or more tasks, ask user for choice
+const MANY_TASKS_THRESHOLD = 5;
 
 export async function POST(request: NextRequest) {
   const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
@@ -27,6 +37,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const update: TelegramUpdate = await request.json();
+
+    // ─── Handle callback query (button press) ────────────────
+    if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query);
+      return NextResponse.json({ ok: true });
+    }
 
     const message = update.message;
     if (!message) return NextResponse.json({ ok: true });
@@ -173,6 +189,71 @@ async function handleStart(
   );
 }
 
+// ── Callback Query handler (button press) ────────────────────
+
+async function handleCallbackQuery(callbackQuery: TelegramUpdate["callback_query"]) {
+  if (!callbackQuery) return;
+
+  const chatId = callbackQuery.message?.chat.id;
+  if (!chatId) return;
+
+  const data = callbackQuery.data;
+  await answerCallbackQuery(callbackQuery.id);
+
+  const user = await getUserWithWorkspace(chatId);
+  if (!user) {
+    await sendMessage(chatId, `❌ Tu cuenta no está vinculada.`);
+    return;
+  }
+
+  const workspaceId = await requirePro(chatId, user);
+  if (!workspaceId) return;
+
+  const session = getPendingSession(chatId);
+  if (!session) {
+    await sendMessage(chatId, `⚠️ Sesión expirada. Envía la imagen nuevamente.`);
+    return;
+  }
+
+  // ── Create in Backlog ────────────────────────────────────────
+  if (data === "photo_backlog") {
+    try {
+      await db.backlogTask.createMany({
+        data: session.tasks.map((taskText, index) => ({
+          text: taskText,
+          source: "TELEGRAM",
+          sortOrder: index,
+          workspaceId,
+        })),
+      });
+
+      clearPendingSession(chatId);
+
+      const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
+      await sendMessage(
+        chatId,
+        `✅ Se ${session.tasks.length === 1 ? 'generó' : 'generaron'} ${session.tasks.length} ${taskWord} en el backlog`,
+      );
+    } catch (error) {
+      console.error("[Telegram] Error creating backlog tasks:", error);
+      await sendMessage(chatId, `❌ Error al crear las tareas. Intenta de nuevo.`);
+    }
+    return;
+  }
+
+  // ── Create Brain Dump ────────────────────────────────────────
+  if (data === "photo_braindump") {
+    // Mark session as awaiting description
+    setPendingSession(chatId, session.tasks, session.source, true);
+    await sendMessage(
+      chatId,
+      `🧠 <b>Crear Brain Dump</b>\n\n` +
+        `Envíame una descripción o título para este brain dump con ${session.tasks.length} tareas.`,
+    );
+    return;
+  }
+}
+
 // ── Text message handler ─────────────────────────────────────
 
 async function handleTextMessage(chatId: number, text: string) {
@@ -189,15 +270,58 @@ async function handleTextMessage(chatId: number, text: string) {
   const workspaceId = await requirePro(chatId, user);
   if (!workspaceId) return;
 
-  await sendMessage(chatId, `📝 Procesando con IA... ⏳`);
+  // Check if awaiting brain dump description
+  const session = getPendingSession(chatId);
+  if (session?.awaitingDescription) {
+    try {
+      const title = text.trim();
+      const rawText = session.tasks.join("\n");
 
+      // Create brain dump with tasks
+      const brainDump = await db.brainDump.create({
+        data: {
+          title,
+          rawText,
+          source: "TELEGRAM",
+          status: "PROCESSED",
+          workspaceId,
+          tasks: {
+            create: session.tasks.map((taskText, index) => ({
+              text: taskText,
+              sortOrder: index,
+              status: "PENDING",
+            })),
+          },
+        },
+      });
+
+      clearPendingSession(chatId);
+
+      const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
+      await sendMessage(
+        chatId,
+        `✅ <b>Brain Dump creado exitosamente</b>\n\n` +
+          `📝 <b>${title}</b>\n` +
+          `📋 ${session.tasks.length} ${taskWord}\n\n` +
+          `ID: <code>${brainDump.id}</code>`,
+      );
+    } catch (error) {
+      console.error("[Telegram] Error creating brain dump:", error);
+      await sendMessage(chatId, `❌ Error al crear el brain dump. Intenta de nuevo.`);
+    }
+    return;
+  }
+
+  // Normal text processing: create tasks in backlog
   try {
-    // Use AI to extract and normalize tasks
-    const normalized = await normalizeText(text);
-    const taskLines = normalized.tasks;
+    // Split text by line breaks, or use entire text if no line breaks
+    const taskLines = text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
     if (taskLines.length === 0) {
-      await sendMessage(chatId, `⚠️ No detecté tareas válidas. Envía texto con una o más tareas.`);
+      await sendMessage(chatId, `⚠️ No se detectó texto válido. Envía al menos una tarea.`);
       return;
     }
 
@@ -211,34 +335,15 @@ async function handleTextMessage(chatId: number, text: string) {
       })),
     });
 
-    // Show extracted tasks confirmation
-    let tasksList = "";
-    taskLines.forEach((task, i) => {
-      tasksList += `${i + 1}. ${task}\n`;
-    });
-
+    // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
     await sendMessage(
       chatId,
-      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
-        `📝 <b>Tareas detectadas:</b>\n\n` +
-        `${tasksList}\n` +
-        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
+      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
     );
   } catch (error) {
     console.error("[Telegram] Error processing text:", error);
-
-    let errorMessage = `❌ Error al procesar el texto. Intenta de nuevo.`;
-
-    if (error instanceof Error) {
-      if (error.message.includes("OPENAI_API_KEY")) {
-        errorMessage = `⚠️ El servicio de IA no está configurado. Contacta al administrador.`;
-      } else if (error.message.includes("quota") || error.message.includes("billing")) {
-        errorMessage = `⚠️ El servicio de IA ha alcanzado su límite. Intenta más tarde.`;
-      }
-    }
-
-    await sendMessage(chatId, errorMessage);
+    await sendMessage(chatId, `❌ Error al procesar el texto. Intenta de nuevo.`);
   }
 }
 
@@ -257,8 +362,6 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
 
   const workspaceId = await requirePro(chatId, user);
   if (!workspaceId) return;
-
-  await sendMessage(chatId, `🎤 Audio recibido. Transcribiendo… ⏳`);
 
   try {
     // 1. Download audio from Telegram
@@ -290,16 +393,16 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
       return;
     }
 
-    // 3. AI Normalize to extract tasks
-    const normalized = await normalizeText(transcribedText);
-    const taskLines = normalized.tasks;
+    // 3. Split transcription by line breaks, or use entire text if no line breaks
+    const taskLines = transcribedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
     if (taskLines.length === 0) {
       await sendMessage(
         chatId,
-        `⚠️ No se detectaron tareas en el audio.\n\n` +
-          `<i>Transcripción: "${transcribedText}"</i>\n\n` +
-          `Intenta con otro audio o envía el texto directamente.`,
+        `⚠️ No se detectó texto válido en el audio.\nIntenta de nuevo.`,
       );
       return;
     }
@@ -314,19 +417,11 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
       })),
     });
 
-    // Show transcribed tasks confirmation
-    let tasksList = "";
-    taskLines.forEach((task, i) => {
-      tasksList += `${i + 1}. ${task}\n`;
-    });
-
+    // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
     await sendMessage(
       chatId,
-      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
-        `🎤 <b>Tareas detectadas:</b>\n\n` +
-        `${tasksList}\n` +
-        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
+      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
     );
   } catch (err) {
     console.error("[Telegram] Voice processing error:", err);
@@ -360,8 +455,6 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
 
   const workspaceId = await requirePro(chatId, user);
   if (!workspaceId) return;
-
-  await sendMessage(chatId, `📷 Imagen recibida. Procesando con IA… ⏳`);
 
   try {
     // 1. Download image from Telegram
@@ -413,19 +506,38 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
       return;
     }
 
-    // 3. AI Normalize + Classify
-    const normalized = await normalizeText(extractedText);
-    const taskLines = normalized.tasks;
+    // 3. Split extracted text by line breaks, or use entire text if no line breaks
+    const taskLines = extractedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
     if (taskLines.length === 0) {
       await sendMessage(
         chatId,
-        `⚠️ No se detectaron tareas en la imagen.\nIntenta con otra imagen o envía el texto directamente.`,
+        `⚠️ No se detectó texto válido en la imagen.\nIntenta con otra imagen o envía el texto directamente.`,
       );
       return;
     }
 
-    // Create tasks directly in backlog
+    // If many tasks detected, ask user: backlog or brain dump?
+    if (taskLines.length >= MANY_TASKS_THRESHOLD) {
+      setPendingSession(chatId, taskLines, "IMAGE");
+      await sendMessageWithKeyboard(
+        chatId,
+        `📷 <b>Detecté ${taskLines.length} tareas de la imagen</b>\n\n` +
+          `¿Qué deseas hacer?`,
+        [
+          [
+            { text: "📋 Crear en Backlog", callback_data: "photo_backlog" },
+            { text: "🧠 Crear Brain Dump", callback_data: "photo_braindump" },
+          ],
+        ],
+      );
+      return;
+    }
+
+    // If few tasks, create directly in backlog
     await db.backlogTask.createMany({
       data: taskLines.map((taskText, index) => ({
         text: taskText,
@@ -435,19 +547,11 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
       })),
     });
 
-    // Show extracted tasks confirmation
-    let tasksList = "";
-    taskLines.forEach((task, i) => {
-      tasksList += `${i + 1}. ${task}\n`;
-    });
-
+    // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
     await sendMessage(
       chatId,
-      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
-        `📷 <b>Tareas detectadas:</b>\n\n` +
-        `${tasksList}\n` +
-        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
+      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
     );
   } catch (err) {
     console.error("[Telegram] Photo processing error:", err);

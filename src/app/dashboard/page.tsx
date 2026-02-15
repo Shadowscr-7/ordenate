@@ -3,7 +3,7 @@
 // ============================================================
 import Link from "next/link";
 
-import { ArrowRight, Brain, LayoutGrid, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, Brain, LayoutGrid, Plus, Sparkles } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/auth/actions";
 import { ROUTES } from "@/lib/constants";
@@ -227,6 +227,15 @@ export default async function DashboardPage() {
                       >
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                           <LayoutGrid className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                      <Link
+                        href={`${ROUTES.PARETO}?dumpId=${dump.id}`}
+                        className="shrink-0"
+                        title="Ver en Pareto"
+                      >
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <BarChart3 className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
                     </div>

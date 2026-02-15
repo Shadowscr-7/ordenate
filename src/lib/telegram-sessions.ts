@@ -7,6 +7,7 @@ interface PendingSession {
   tasks: string[];
   timestamp: number;
   source: "TEXT" | "IMAGE" | "VOICE";
+  awaitingDescription?: boolean; // When true, waiting for user to provide brain dump description
 }
 
 const pendingSessions = new Map<string, PendingSession>();
@@ -28,11 +29,13 @@ export function setPendingSession(
   chatId: number,
   tasks: string[],
   source: "TEXT" | "IMAGE" | "VOICE",
+  awaitingDescription?: boolean,
 ): void {
   pendingSessions.set(String(chatId), {
     tasks,
     timestamp: Date.now(),
     source,
+    awaitingDescription,
   });
 }
 

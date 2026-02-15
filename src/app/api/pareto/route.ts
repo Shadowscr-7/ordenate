@@ -8,7 +8,8 @@ import { getSession } from "@/lib/auth/actions";
 import { db } from "@/lib/db";
 
 // GET /api/pareto — get all non-hidden tasks with Pareto info
-export async function GET(_request: NextRequest) {
+// Optional: ?brainDumpId=xxx to filter by specific brain dump
+export async function GET(request: NextRequest) {
   try {
     const authUser = await getSession();
     if (!authUser) return apiUnauthorized();
@@ -20,10 +21,14 @@ export async function GET(_request: NextRequest) {
     const workspaceId = user?.memberships[0]?.workspaceId;
     if (!workspaceId) return apiUnauthorized();
 
+    const { searchParams } = new URL(request.url);
+    const brainDumpId = searchParams.get("brainDumpId");
+
     const tasks = await db.task.findMany({
       where: {
         brainDump: { workspaceId },
         status: { not: "HIDDEN" },
+        ...(brainDumpId ? { brainDumpId } : {}),
       },
       orderBy: [{ isPareto: "desc" }, { sortOrder: "asc" }],
       include: {
