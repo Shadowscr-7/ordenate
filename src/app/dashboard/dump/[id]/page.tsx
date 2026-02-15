@@ -28,6 +28,7 @@ import {
   Clock,
   Eye,
   EyeOff,
+  LayoutGrid,
   Loader2,
   Pencil,
   Plus,
@@ -860,9 +861,9 @@ export default function BrainDumpDetailPage() {
           asChild
           className="from-primary shadow-primary/20 flex-1 bg-gradient-to-r to-cyan-500 text-white shadow-md"
         >
-          <Link href={ROUTES.NEW_DUMP}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo dump
+          <Link href={`${ROUTES.EISENHOWER}?dumpId=${id}`}>
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            Clasificar en Eisenhower
           </Link>
         </Button>
       </div>
