@@ -230,10 +230,18 @@ async function handleCallbackQuery(callbackQuery: TelegramUpdate["callback_query
       clearPendingSession(chatId);
 
       const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
-      await sendMessage(
-        chatId,
-        `✅ Se ${session.tasks.length === 1 ? 'generó' : 'generaron'} ${session.tasks.length} ${taskWord} en el backlog`,
-      );
+      let message = `✅ Se ${session.tasks.length === 1 ? 'generó' : 'generaron'} ${session.tasks.length} ${taskWord} en el backlog`;
+      
+      if (session.tasks.length === 1) {
+        message += `:\n\n<i>${session.tasks[0]}</i>`;
+      } else {
+        message += `:\n\n`;
+        session.tasks.forEach((task, index) => {
+          message += `${index + 1}. <i>${task}</i>\n`;
+        });
+      }
+      
+      await sendMessage(chatId, message);
     } catch (error) {
       console.error("[Telegram] Error creating backlog tasks:", error);
       await sendMessage(chatId, `❌ Error al crear las tareas. Intenta de nuevo.`);
@@ -298,13 +306,22 @@ async function handleTextMessage(chatId: number, text: string) {
       clearPendingSession(chatId);
 
       const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
-      await sendMessage(
-        chatId,
-        `✅ <b>Brain Dump creado exitosamente</b>\n\n` +
-          `📝 <b>${title}</b>\n` +
-          `📋 ${session.tasks.length} ${taskWord}\n\n` +
-          `ID: <code>${brainDump.id}</code>`,
-      );
+      let message = `✅ <b>Brain Dump creado exitosamente</b>\n\n` +
+        `📝 <b>${title}</b>\n` +
+        `📋 ${session.tasks.length} ${taskWord}\n\n`;
+      
+      if (session.tasks.length === 1) {
+        message += `<i>${session.tasks[0]}</i>\n\n`;
+      } else {
+        session.tasks.forEach((task, index) => {
+          message += `${index + 1}. <i>${task}</i>\n`;
+        });
+        message += `\n`;
+      }
+      
+      message += `ID: <code>${brainDump.id}</code>`;
+      
+      await sendMessage(chatId, message);
     } catch (error) {
       console.error("[Telegram] Error creating brain dump:", error);
       await sendMessage(chatId, `❌ Error al crear el brain dump. Intenta de nuevo.`);
@@ -337,10 +354,18 @@ async function handleTextMessage(chatId: number, text: string) {
 
     // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
-    await sendMessage(
-      chatId,
-      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
-    );
+    let message = `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`;
+    
+    if (taskLines.length === 1) {
+      message += `:\n\n<i>${taskLines[0]}</i>`;
+    } else {
+      message += `:\n\n`;
+      taskLines.forEach((task, index) => {
+        message += `${index + 1}. <i>${task}</i>\n`;
+      });
+    }
+    
+    await sendMessage(chatId, message);
   } catch (error) {
     console.error("[Telegram] Error processing text:", error);
     await sendMessage(chatId, `❌ Error al procesar el texto. Intenta de nuevo.`);
@@ -419,10 +444,18 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
 
     // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
-    await sendMessage(
-      chatId,
-      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
-    );
+    let message = `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`;
+    
+    if (taskLines.length === 1) {
+      message += `:\n\n<i>${taskLines[0]}</i>`;
+    } else {
+      message += `:\n\n`;
+      taskLines.forEach((task, index) => {
+        message += `${index + 1}. <i>${task}</i>\n`;
+      });
+    }
+    
+    await sendMessage(chatId, message);
   } catch (err) {
     console.error("[Telegram] Voice processing error:", err);
 
@@ -549,10 +582,18 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
 
     // Show created tasks confirmation
     const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
-    await sendMessage(
-      chatId,
-      `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`,
-    );
+    let message = `✅ Se ${taskLines.length === 1 ? 'generó' : 'generaron'} ${taskLines.length} ${taskWord} en el backlog`;
+    
+    if (taskLines.length === 1) {
+      message += `:\n\n<i>${taskLines[0]}</i>`;
+    } else {
+      message += `:\n\n`;
+      taskLines.forEach((task, index) => {
+        message += `${index + 1}. <i>${task}</i>\n`;
+      });
+    }
+    
+    await sendMessage(chatId, message);
   } catch (err) {
     console.error("[Telegram] Photo processing error:", err);
 
