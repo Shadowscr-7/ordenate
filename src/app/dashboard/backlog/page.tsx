@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { Textarea } from "@/components/ui/textarea";
 
 interface BacklogTask {
   id: string;
@@ -39,7 +40,7 @@ interface BrainDump {
 
 export default function BacklogPage() {
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [tasks, setTasks] = useState<BacklogTask[]>([]);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -143,30 +144,41 @@ export default function BacklogPage() {
   async function handleCreateTask() {
     const text = newTaskText.trim();
     if (!text) {
-      toast.error("Escribe una tarea");
+      toast.error("Escribe al menos una tarea");
       return;
     }
 
     try {
       setCreatingTask(true);
-      const res = await fetch("/api/backlog", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to create task");
+      
+      // Dividir por líneas y crear una tarea por cada línea no vacía
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      
+      if (lines.length === 0) {
+        toast.error("Escribe al menos una tarea");
+        return;
       }
 
-      toast.success("Tarea creada");
+      // Crear todas las tareas en paralelo
+      const promises = lines.map(line =>
+        fetch("/api/backlog", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: line }),
+        })
+      );
+
+      await Promise.all(promises);
+
+      const taskWord = lines.length === 1 ? "tarea creada" : `${lines.length} tareas creadas`;
+      toast.success(taskWord);
       setNewTaskText("");
       fetchBacklog();
-      // Mantener foco en el input para seguir agregando tareas
+      // Mantener foco en el textarea para seguir agregando tareas
       setTimeout(() => inputRef.current?.focus(), 0);
     } catch (error) {
       console.error("Error creating task:", error);
-      toast.error("Error al crear tarea");
+      toast.error("Error al crear tareas");
     } finally {
       setCreatingTask(false);
     }
@@ -286,23 +298,26 @@ export default function BacklogPage() {
       {/* Add new task */}
       <Card className="bg-card mb-6 p-3" data-tour="create-task">
         <div className="flex gap-2">
-          <Input
+          <Textarea
             ref={inputRef}
-            placeholder="Escribe una tarea y presiona Enter..."
+            placeholder="Escribe una o más tareas (Enter para nueva línea)..."
             value={newTaskText}
             onChange={(e) => setNewTaskText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !creatingTask) {
+              // Ctrl/Cmd + Enter para guardar
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !creatingTask) {
+                e.preventDefault();
                 handleCreateTask();
               }
             }}
             disabled={creatingTask}
-            className="flex-1"
+            className="flex-1 min-h-[40px] max-h-[200px] resize-y"
+            rows={2}
           />
           <Button
             onClick={handleCreateTask}
             disabled={creatingTask || !newTaskText.trim()}
-            className="gap-1.5"
+            className="gap-1.5 self-start"
           >
             <Plus className="h-4 w-4" />
             Agregar
