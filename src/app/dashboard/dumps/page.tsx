@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import {
   ArrowRight,
+  BarChart3,
   Brain,
   Calendar,
   CheckCircle2,
@@ -237,12 +238,20 @@ export default async function DumpsPage() {
                           </Link>
                         </Button>
                         {pendingCount > 0 && (
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`${ROUTES.EISENHOWER}?dumpId=${dump.id}`}>
-                              <LayoutGrid className="mr-1 h-4 w-4" />
-                              Eisenhower
-                            </Link>
-                          </Button>
+                          <>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`${ROUTES.EISENHOWER}?dumpId=${dump.id}`}>
+                                <LayoutGrid className="mr-1 h-4 w-4" />
+                                Eisenhower
+                              </Link>
+                            </Button>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`${ROUTES.PARETO}?dumpId=${dump.id}`}>
+                                <BarChart3 className="mr-1 h-4 w-4" />
+                                Pareto
+                              </Link>
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
