@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { ArrowRight, ListPlus, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ListPlus, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -55,14 +55,17 @@ export default function BacklogPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [newTaskText, setNewTaskText] = useState("");
   const [creatingTask, setCreatingTask] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [displayLimit, setDisplayLimit] = useState(20);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchBacklog();
   }, []);
 
-  async function fetchBacklog() {
+  async function fetchBacklog(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [backlogRes, dumpsRes] = await Promise.all([
         fetch("/api/backlog"),
         fetch("/api/braindump?limit=20"),
@@ -88,10 +91,17 @@ export default function BacklogPage() {
       }
     } catch (error) {
       console.error("Error fetching backlog:", error);
-      toast.error("Error al cargar el backlog");
+      if (!silent) toast.error("Error al cargar el backlog");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
+  }
+
+  async function handleRefresh() {
+    setIsRefreshing(true);
+    await fetchBacklog(true);
+    toast.success("Backlog actualizado");
   }
 
   function toggleTask(taskId: string) {
@@ -279,6 +289,15 @@ export default function BacklogPage() {
     );
   };
 
+  // Filtrar tareas por búsqueda
+  const filteredTasks = tasks.filter((task) => 
+    task.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Limitar tareas mostradas
+  const displayedTasks = filteredTasks.slice(0, displayLimit);
+  const hasMore = filteredTasks.length > displayLimit;
+
   if (loading) {
     return <LoadingOverlay message="Cargando backlog..." />;
   }
@@ -293,7 +312,30 @@ export default function BacklogPage() {
             {tasks.length} {tasks.length === 1 ? "tarea" : "tareas"} pendientes
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="gap-1.5"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          Actualizar
+        </Button>
       </div>
+
+      {/* Search filter */}
+      <Card className="bg-card mb-4 p-3">
+        <div className="relative">
+          <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder="Buscar tareas..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </Card>
 
       {/* Add new task */}
       <Card className="bg-card mb-6 p-3" data-tour="create-task">
@@ -382,19 +424,37 @@ export default function BacklogPage() {
             </Button>
           </div>
         </Card>
+      ) : filteredTasks.length === 0 ? (
+        <Card className="p-12 text-center">
+          <div className="mx-auto max-w-md">
+            <Search className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+            <h3 className="mb-2 text-xl font-semibold">No se encontraron tareas</h3>
+            <p className="text-muted-foreground mb-6">
+              No hay tareas que coincidan con &quot;{searchQuery}&quot;
+            </p>
+            <Button onClick={() => setSearchQuery("")} variant="outline">
+              Limpiar búsqueda
+            </Button>
+          </div>
+        </Card>
       ) : (
         <div className="space-y-3" data-tour="task-list">
           <div className="mb-1 flex items-center gap-2 px-1 py-2">
-            <Checkbox checked={selectedTasks.size === tasks.length} onCheckedChange={toggleAll} />
+            <Checkbox checked={selectedTasks.size === filteredTasks.length && filteredTasks.length > 0} onCheckedChange={toggleAll} />
             <span
               className="text-muted-foreground hover:text-foreground cursor-pointer text-sm font-medium transition-colors"
               onClick={() => toggleAll()}
             >
               Seleccionar todas
             </span>
+            {searchQuery && (
+              <span className="text-muted-foreground text-xs">
+                ({filteredTasks.length} {filteredTasks.length === 1 ? "resultado" : "resultados"})
+              </span>
+            )}
           </div>
 
-          {tasks.map((task) => (
+          {displayedTasks.map((task) => (
             <Card
               key={task.id}
               className="hover:border-primary/50 p-3 transition-all hover:shadow-sm"
@@ -427,6 +487,19 @@ export default function BacklogPage() {
               </div>
             </Card>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setDisplayLimit(displayLimit + 20)}
+                className="gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                Cargar más ({filteredTasks.length - displayLimit} restantes)
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
