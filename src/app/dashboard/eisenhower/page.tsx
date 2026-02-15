@@ -517,7 +517,7 @@ export default function EisenhowerPage() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
-  const [hideDone, setHideDone] = useState(false);
+  const [hideDone, setHideDone] = useState(true);
   const [showDump, setShowDump] = useState(true);
   const [inboxCollapsed, setInboxCollapsed] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
