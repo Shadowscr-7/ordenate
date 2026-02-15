@@ -102,6 +102,8 @@ export default function BacklogPage() {
     setIsRefreshing(true);
     await fetchBacklog(true);
     toast.success("Backlog actualizado");
+    // Restaurar foco en el textarea
+    setTimeout(() => inputRef.current?.focus(), 100);
   }
 
   function toggleTask(taskId: string) {
@@ -142,7 +144,9 @@ export default function BacklogPage() {
       await Promise.all(promises);
       toast.success("Tareas eliminadas");
       setSelectedTasks(new Set());
-      fetchBacklog();
+      await fetchBacklog(true);
+      // Restaurar foco en el textarea
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error) {
       console.error("Error deleting tasks:", error);
       toast.error("Error al eliminar tareas");
@@ -183,9 +187,9 @@ export default function BacklogPage() {
       const taskWord = lines.length === 1 ? "tarea creada" : `${lines.length} tareas creadas`;
       toast.success(taskWord);
       setNewTaskText("");
-      fetchBacklog();
+      await fetchBacklog(true);
       // Mantener foco en el textarea para seguir agregando tareas
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error("Error al crear tareas");
@@ -220,7 +224,9 @@ export default function BacklogPage() {
       setSelectedTasks(new Set());
       setShowMoveDialog(false);
       setSelectedDumpId("");
-      fetchBacklog();
+      await fetchBacklog(true);
+      // Restaurar foco en el textarea
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error) {
       console.error("Error moving tasks:", error);
       toast.error("Error al mover tareas");
