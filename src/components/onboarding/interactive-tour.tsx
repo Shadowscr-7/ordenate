@@ -32,10 +32,37 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
+        /* Floater body - Fondo y contorno destacado */
+        .__floater__body {
+          background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.98) 100%) !important;
+          border: 2px solid hsl(var(--primary) / 0.3) !important;
+          border-radius: 20px !important;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                      0 20px 40px -10px rgba(0, 0, 0, 0.5),
+                      0 10px 20px -5px rgba(0, 0, 0, 0.3),
+                      0 0 60px -15px hsl(var(--primary) / 0.2) !important;
+        }
+        
         /* Flecha del tooltip */
+        .__floater__arrow {
+          filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
+        }
+        
         .__floater__arrow polygon {
           fill: hsl(var(--card)) !important;
-          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+          stroke: hsl(var(--primary) / 0.3) !important;
+          stroke-width: 2px !important;
+        }
+        
+        /* Spotlight - Reborde azul/celeste con transparencia */
+        .react-joyride__spotlight {
+          border: 3px solid hsl(199deg 89% 48% / 0.8) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.88),
+                      0 0 0 6px hsl(199deg 89% 48% / 0.4),
+                      0 0 20px 3px hsl(199deg 89% 48% / 0.6),
+                      inset 0 0 20px 0 hsl(199deg 89% 48% / 0.15) !important;
+          background: transparent !important;
         }
         
         /* Animación de entrada del tooltip */
@@ -190,26 +217,25 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
         options: {
           primaryColor: "hsl(var(--primary))",
           textColor: "hsl(var(--card-foreground))",
-          backgroundColor: "hsl(var(--card))",
+          backgroundColor: "transparent",
           overlayColor: "rgba(0, 0, 0, 0.88)",
-          arrowColor: "hsl(var(--card))",
+          arrowColor: "transparent",
           zIndex: 10000,
         },
         overlay: {
           mixBlendMode: "normal",
-          backdropFilter: "blur(2px)",
+          backdropFilter: "blur(3px)",
         },
         spotlight: {
-          borderRadius: "12px",
-          boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.88), 0 0 24px rgba(255, 255, 255, 0.15)",
+          // Estilos manejados por CSS personalizado
         },
         tooltip: {
           borderRadius: "20px",
           fontSize: "15px",
           padding: "0",
-          backgroundColor: "hsl(var(--card))",
-          border: "2px solid hsl(var(--border))",
-          boxShadow: "0 32px 64px -16px rgba(0, 0, 0, 0.9), 0 16px 32px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08) inset",
+          backgroundColor: "transparent",
+          border: "none",
+          boxShadow: "none",
           maxWidth: "460px",
           minWidth: "320px",
         },
@@ -225,6 +251,9 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
           fontSize: "15px",
           lineHeight: "1.65",
           color: "hsl(var(--card-foreground))",
+          backgroundColor: "hsl(var(--card))",
+          borderTopLeftRadius: "20px",
+          borderTopRightRadius: "20px",
         },
         tooltipFooter: {
           marginTop: "0",
@@ -234,9 +263,9 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: "12px",
-          backgroundColor: "hsl(var(--muted) / 0.3)",
-          borderBottomLeftRadius: "18px",
-          borderBottomRightRadius: "18px",
+          backgroundColor: "hsl(var(--card))",
+          borderBottomLeftRadius: "20px",
+          borderBottomRightRadius: "20px",
         },
         tooltipFooterSpacer: {
           flex: "1",
