@@ -58,6 +58,7 @@ import {
   Trash2,
   User,
   X,
+  BarChart3,
 } from "lucide-react";
 
 import { ROUTES } from "@/lib/constants";
@@ -901,6 +902,23 @@ export default function EisenhowerPage() {
                 )}
                 Clasificar con IA
               </Button>
+            )}
+            {brainDumpFilter && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    asChild
+                    className="h-7 gap-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-xs text-white shadow-md"
+                  >
+                    <Link href={`${ROUTES.PARETO}?dumpId=${brainDumpFilter}`}>
+                      <BarChart3 className="h-3 w-3" />
+                      Foco Pareto
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Ir al foco Pareto (20% más importante)</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
