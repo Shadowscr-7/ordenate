@@ -58,7 +58,7 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
         .react-joyride__spotlight {
           border: 3px solid hsl(199deg 89% 48% / 0.8) !important;
           border-radius: 12px !important;
-          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.88),
+          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5),
                       0 0 0 6px hsl(199deg 89% 48% / 0.4),
                       0 0 20px 3px hsl(199deg 89% 48% / 0.6),
                       inset 0 0 20px 0 hsl(199deg 89% 48% / 0.15) !important;
@@ -218,13 +218,13 @@ export function InteractiveTour({ context }: InteractiveTourProps) {
           primaryColor: "hsl(var(--primary))",
           textColor: "hsl(var(--card-foreground))",
           backgroundColor: "transparent",
-          overlayColor: "rgba(0, 0, 0, 0.88)",
+          overlayColor: "rgba(0, 0, 0, 0.5)",
           arrowColor: "transparent",
           zIndex: 10000,
         },
         overlay: {
           mixBlendMode: "normal",
-          backdropFilter: "blur(3px)",
+          backdropFilter: "blur(1px)",
         },
         spotlight: {
           // Estilos manejados por CSS personalizado
