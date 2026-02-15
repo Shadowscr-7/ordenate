@@ -278,6 +278,17 @@ async function handleTextMessage(chatId: number, text: string) {
   const workspaceId = await requirePro(chatId, user);
   if (!workspaceId) return;
 
+  // Check for asterisk command - send backend URL
+  if (text.trim() === "*") {
+    await sendMessage(
+      chatId,
+      `🌐 <b>URL del Backend</b>\n\n` +
+        `<a href="https://ordenate.vercel.app/">https://ordenate.vercel.app/</a>\n\n` +
+        `¡Accede a tu dashboard! 🧠`,
+    );
+    return;
+  }
+
   // Check if awaiting brain dump description
   const session = getPendingSession(chatId);
   if (session?.awaitingDescription) {
