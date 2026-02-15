@@ -431,7 +431,7 @@ export default function BrainDumpDetailPage() {
 
   if (error || !dump) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Brain className="text-muted-foreground/50 mb-4 h-12 w-12" />
           <h3 className="mb-1 text-lg font-semibold">{error || "Brain Dump no encontrado"}</h3>
@@ -454,7 +454,7 @@ export default function BrainDumpDetailPage() {
   const transitions = DUMP_TRANSITIONS[dump.status] ?? [];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div className="animate-fade-in flex items-start justify-between gap-4">
         <div className="space-y-1">
