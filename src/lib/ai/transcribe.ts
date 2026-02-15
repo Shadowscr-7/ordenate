@@ -27,6 +27,8 @@ export async function transcribeAudio(
       model: "whisper-1",
       language: "es", // Spanish
       response_format: "json",
+      prompt:
+        "El usuario está dictando una lista de tareas o cosas por hacer. Puede mencionar múltiples tareas, fechas, nombres de personas o lugares. Transcribe con precisión todo lo que dice.",
     });
 
     return { text: transcription.text };

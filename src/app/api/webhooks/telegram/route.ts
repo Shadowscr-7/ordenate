@@ -3,9 +3,9 @@
 // ============================================================
 // Conversational flow:
 //   /start OD-XXXX  → Links Telegram account
-//   Text message    → Extract tasks → Ask destination (brain/backlog)
-//   Photo messages  → OCR → Extract tasks → Ask destination
-//   Voice/Audio     → Transcribe → Extract tasks → Review → Ask destination
+//   Text message    → Extract tasks → Create in backlog
+//   Photo messages  → OCR → Extract tasks → Create in backlog
+//   Voice/Audio     → Transcribe → Extract tasks → Create in backlog
 // ============================================================
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,14 +14,10 @@ import { db } from "@/lib/db";
 import { hasProAccess } from "@/lib/plan-gate";
 import {
   type TelegramUpdate,
-  answerCallbackQuery,
-  editMessageText,
   extractLinkCode,
   getFileUrl,
   sendMessage,
-  sendMessageWithKeyboard,
 } from "@/lib/telegram";
-import { clearPendingSession, getPendingSession, setPendingSession } from "@/lib/telegram-sessions";
 
 export async function POST(request: NextRequest) {
   const secretToken = request.headers.get("x-telegram-bot-api-secret-token");
@@ -31,12 +27,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const update: TelegramUpdate = await request.json();
-
-    // ─── Callback Query (button press) ────────────────────────
-    if (update.callback_query) {
-      await handleCallbackQuery(update.callback_query);
-      return NextResponse.json({ ok: true });
-    }
 
     const message = update.message;
     if (!message) return NextResponse.json({ ok: true });
@@ -113,13 +103,6 @@ async function requirePro(
     return null;
   }
   return workspace.id;
-}
-
-function parseLines(text: string): string[] {
-  return text
-    .split(/\n/)
-    .map((l: string) => l.trim())
-    .filter((l: string) => l.length > 0);
 }
 
 // ─── Handlers ─────────────────────────────────────────────────
@@ -206,62 +189,57 @@ async function handleTextMessage(chatId: number, text: string) {
   const workspaceId = await requirePro(chatId, user);
   if (!workspaceId) return;
 
-  // Check if there's a pending session waiting for brain name
-  const session = getPendingSession(chatId);
-  if (session) {
-    // User is providing the brain dump name
-    const brainName = text.trim();
+  await sendMessage(chatId, `📝 Procesando con IA... ⏳`);
 
-    try {
-      // Create brain dump with tasks
-      await db.brainDump.create({
-        data: {
-          title: brainName,
-          workspaceId,
-          source: "TELEGRAM",
-          status: "DRAFT",
-          rawText: session.tasks.join("\n"),
-          tasks: {
-            create: session.tasks.map((taskText, index) => ({
-              text: taskText,
-              sortOrder: index,
-              status: "PENDING",
-            })),
-          },
-        },
-      });
+  try {
+    // Use AI to extract and normalize tasks
+    const normalized = await normalizeText(text);
+    const taskLines = normalized.tasks;
 
-      clearPendingSession(chatId);
-
-      const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
-      await sendMessage(
-        chatId,
-        `✅ <b>Brain Dump creado</b>\n\n` +
-          `📂 Nombre: <b>${brainName}</b>\n` +
-          `📝 ${session.tasks.length} ${taskWord} agregadas\n\n` +
-          `Abre la app para verlo. 🎯`,
-      );
-      return;
-    } catch (error) {
-      console.error("[Telegram] Error creating brain dump:", error);
-      await sendMessage(chatId, `❌ Error al crear el brain dump. Intenta de nuevo.`);
+    if (taskLines.length === 0) {
+      await sendMessage(chatId, `⚠️ No detecté tareas válidas. Envía texto con una o más tareas.`);
       return;
     }
+
+    // Create tasks directly in backlog
+    await db.backlogTask.createMany({
+      data: taskLines.map((taskText, index) => ({
+        text: taskText,
+        source: "TELEGRAM",
+        sortOrder: index,
+        workspaceId,
+      })),
+    });
+
+    // Show extracted tasks confirmation
+    let tasksList = "";
+    taskLines.forEach((task, i) => {
+      tasksList += `${i + 1}. ${task}\n`;
+    });
+
+    const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
+    await sendMessage(
+      chatId,
+      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
+        `📝 <b>Tareas detectadas:</b>\n\n` +
+        `${tasksList}\n` +
+        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
+    );
+  } catch (error) {
+    console.error("[Telegram] Error processing text:", error);
+
+    let errorMessage = `❌ Error al procesar el texto. Intenta de nuevo.`;
+
+    if (error instanceof Error) {
+      if (error.message.includes("OPENAI_API_KEY")) {
+        errorMessage = `⚠️ El servicio de IA no está configurado. Contacta al administrador.`;
+      } else if (error.message.includes("quota") || error.message.includes("billing")) {
+        errorMessage = `⚠️ El servicio de IA ha alcanzado su límite. Intenta más tarde.`;
+      }
+    }
+
+    await sendMessage(chatId, errorMessage);
   }
-
-  // Normal text message flow (no pending session)
-  const lines = parseLines(text);
-
-  if (lines.length === 0) {
-    await sendMessage(chatId, `⚠️ No detecté tareas válidas. Envía texto con una o más tareas.`);
-    return;
-  }
-
-  // Save pending session
-  setPendingSession(chatId, lines, "TEXT");
-
-  // Show tasks and ask destination
-  await showTasksAndAskDestination(chatId, lines, "TEXT");
 }
 
 // ── Voice/Audio handler ─────────────────────────────────────
@@ -326,30 +304,30 @@ async function handleVoiceMessage(chatId: number, fileId: string, mimeType?: str
       return;
     }
 
-    // Save pending session
-    setPendingSession(chatId, taskLines, "VOICE");
+    // Create tasks directly in backlog
+    await db.backlogTask.createMany({
+      data: taskLines.map((taskText, index) => ({
+        text: taskText,
+        source: "TELEGRAM",
+        sortOrder: index,
+        workspaceId,
+      })),
+    });
 
-    // Show transcribed tasks and ask for confirmation
+    // Show transcribed tasks confirmation
     let tasksList = "";
     taskLines.forEach((task, i) => {
       tasksList += `${i + 1}. ${task}\n`;
     });
 
+    const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
     await sendMessage(
       chatId,
-      `🎤 <b>Audio transcrito</b>\n\n` +
-        `Detecté <b>${taskLines.length}</b> ${taskLines.length === 1 ? "tarea" : "tareas"}:\n\n` +
+      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
+        `🎤 <b>Tareas detectadas:</b>\n\n` +
         `${tasksList}\n` +
-        `¿Todo correcto?`,
+        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
     );
-
-    // Buttons: Confirm or Correct
-    await sendMessageWithKeyboard(chatId, `Elige una opción:`, [
-      [
-        { text: "✅ Confirmar tareas", callback_data: "confirm_audio" },
-        { text: "✏️ Enviar correcciones", callback_data: "cancel_audio" },
-      ],
-    ]);
   } catch (err) {
     console.error("[Telegram] Voice processing error:", err);
 
@@ -447,11 +425,30 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
       return;
     }
 
-    // Save pending session
-    setPendingSession(chatId, taskLines, "IMAGE");
+    // Create tasks directly in backlog
+    await db.backlogTask.createMany({
+      data: taskLines.map((taskText, index) => ({
+        text: taskText,
+        source: "TELEGRAM",
+        sortOrder: index,
+        workspaceId,
+      })),
+    });
 
-    // Show tasks and ask destination
-    await showTasksAndAskDestination(chatId, taskLines, "IMAGE");
+    // Show extracted tasks confirmation
+    let tasksList = "";
+    taskLines.forEach((task, i) => {
+      tasksList += `${i + 1}. ${task}\n`;
+    });
+
+    const taskWord = taskLines.length === 1 ? "tarea" : "tareas";
+    await sendMessage(
+      chatId,
+      `✅ <b>${taskLines.length} ${taskWord} creadas en el backlog</b>\n\n` +
+        `📷 <b>Tareas detectadas:</b>\n\n` +
+        `${tasksList}\n` +
+        `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
+    );
   } catch (err) {
     console.error("[Telegram] Photo processing error:", err);
 
@@ -467,237 +464,4 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
 
     await sendMessage(chatId, errorMessage);
   }
-}
-
-// ── Helper: Show tasks and ask destination ───────────────────
-
-async function showTasksAndAskDestination(
-  chatId: number,
-  tasks: string[],
-  source: "TEXT" | "IMAGE" | "VOICE",
-) {
-  const sourceEmoji = source === "TEXT" ? "📝" : source === "IMAGE" ? "📷" : "🎤";
-  let tasksList = "";
-  tasks.forEach((task, i) => {
-    tasksList += `${i + 1}. ${task}\n`;
-  });
-
-  await sendMessage(
-    chatId,
-    `${sourceEmoji} <b>Tareas detectadas</b>\n\n` +
-      `${tasksList}\n` +
-      `¿Dónde quieres guardar estas tareas?`,
-  );
-
-  await sendMessageWithKeyboard(chatId, `Elige una opción:`, [
-    [{ text: "🧠 Crear nuevo Brain Dump", callback_data: "create_brain" }],
-    [{ text: "📁 Asociar a Brain existente", callback_data: "associate_brain" }],
-    [{ text: "📋 Enviar al Backlog", callback_data: "send_backlog" }],
-  ]);
-}
-
-// ── Callback Query Handler ────────────────────────────────────
-
-async function handleCallbackQuery(query: NonNullable<TelegramUpdate["callback_query"]>) {
-  const chatId = query.message?.chat.id;
-  const messageId = query.message?.message_id;
-  const data = query.data || "";
-
-  if (!chatId) {
-    await answerCallbackQuery(query.id, "Error: no se encontró el chat");
-    return;
-  }
-
-  const user = await getUserWithWorkspace(chatId);
-  if (!user) {
-    await answerCallbackQuery(query.id, "Cuenta no vinculada");
-    return;
-  }
-
-  const workspaceId = user.memberships[0]?.workspaceId;
-  if (!workspaceId) {
-    await answerCallbackQuery(query.id, "Workspace no encontrado");
-    return;
-  }
-
-  const session = getPendingSession(chatId);
-
-  // Audio confirmation
-  if (data === "confirm_audio") {
-    await answerCallbackQuery(query.id);
-    if (!session) {
-      await sendMessage(chatId, `⚠️ La sesión expiró. Envía el audio de nuevo.`);
-      return;
-    }
-    // Show destination options
-    await showTasksAndAskDestination(chatId, session.tasks, "VOICE");
-    return;
-  }
-
-  if (data === "cancel_audio") {
-    await answerCallbackQuery(query.id, "Envía las correcciones como texto");
-    clearPendingSession(chatId);
-    if (messageId) {
-      await editMessageText(
-        chatId,
-        messageId,
-        `❌ Tareas canceladas. Envía las correcciones como texto normal.`,
-      );
-    }
-    return;
-  }
-
-  // Send to backlog
-  if (data === "send_backlog") {
-    await answerCallbackQuery(query.id);
-    if (!session) {
-      await sendMessage(chatId, `⚠️ La sesión expiró. Intenta de nuevo.`);
-      return;
-    }
-
-    try {
-      await db.backlogTask.createMany({
-        data: session.tasks.map((text, index) => ({
-          text,
-          source: "TELEGRAM",
-          sortOrder: index,
-          workspaceId,
-        })),
-      });
-
-      clearPendingSession(chatId);
-
-      const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
-      if (messageId) {
-        await editMessageText(
-          chatId,
-          messageId,
-          `✅ <b>${session.tasks.length} ${taskWord} enviadas al backlog</b>\n\n` +
-            `Abre la app en la sección <b>Backlog</b> para organizarlas. 🎯`,
-        );
-      }
-    } catch (error) {
-      console.error("[Telegram] Error saving to backlog:", error);
-      await sendMessage(chatId, `❌ Error al guardar las tareas. Intenta de nuevo.`);
-    }
-    return;
-  }
-
-  // Create new brain dump
-  if (data === "create_brain") {
-    await answerCallbackQuery(query.id);
-    if (!session) {
-      await sendMessage(chatId, `⚠️ La sesión expiró. Intenta de nuevo.`);
-      return;
-    }
-
-    if (messageId) {
-      await editMessageText(
-        chatId,
-        messageId,
-        `🧠 <b>Crear nuevo Brain Dump</b>\n\nEnvía el nombre para el brain dump:`,
-      );
-    } else {
-      await sendMessage(
-        chatId,
-        `🧠 <b>Crear nuevo Brain Dump</b>\n\nEnvía el nombre para el brain dump:`,
-      );
-    }
-
-    // Mark session as waiting for brain name
-    setPendingSession(chatId, session.tasks, session.source);
-    return;
-  }
-
-  // Associate to existing brain
-  if (data === "associate_brain") {
-    await answerCallbackQuery(query.id);
-    if (!session) {
-      await sendMessage(chatId, `⚠️ La sesión expiró. Intenta de nuevo.`);
-      return;
-    }
-
-    // Fetch user's brain dumps
-    const brainDumps = await db.brainDump.findMany({
-      where: { workspaceId },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: { id: true, title: true },
-    });
-
-    if (brainDumps.length === 0) {
-      await sendMessage(
-        chatId,
-        `⚠️ No tienes brain dumps todavía.\n\n` +
-          `Puedes crear uno nuevo o enviar las tareas al backlog.`,
-      );
-      await showTasksAndAskDestination(chatId, session.tasks, session.source);
-      return;
-    }
-
-    // Create buttons for each brain dump
-    const buttons = brainDumps.map((dump) => [
-      { text: dump.title || "Sin título", callback_data: `brain_${dump.id}` },
-    ]);
-
-    if (messageId) {
-      await editMessageText(chatId, messageId, `📁 <b>Selecciona un Brain Dump:</b>`);
-    }
-
-    await sendMessageWithKeyboard(chatId, `Elige dónde agregar las tareas:`, buttons);
-    return;
-  }
-
-  // Associate to specific brain (brain_<id>)
-  if (data.startsWith("brain_")) {
-    await answerCallbackQuery(query.id);
-    const brainDumpId = data.substring(6); // Remove "brain_" prefix
-
-    if (!session) {
-      await sendMessage(chatId, `⚠️ La sesión expiró. Intenta de nuevo.`);
-      return;
-    }
-
-    try {
-      // Get max sortOrder for this brain dump
-      const lastTask = await db.task.findFirst({
-        where: { brainDumpId },
-        orderBy: { sortOrder: "desc" },
-        select: { sortOrder: true },
-      });
-
-      let nextSortOrder = 0;
-      if (lastTask) {
-        nextSortOrder = lastTask.sortOrder + 1;
-      }
-
-      // Create tasks
-      await db.task.createMany({
-        data: session.tasks.map((text, index) => ({
-          text,
-          sortOrder: nextSortOrder + index,
-          status: "PENDING",
-          brainDumpId,
-        })),
-      });
-
-      clearPendingSession(chatId);
-
-      const taskWord = session.tasks.length === 1 ? "tarea" : "tareas";
-      if (messageId) {
-        await editMessageText(
-          chatId,
-          messageId,
-          `✅ <b>${session.tasks.length} ${taskWord} agregadas al brain dump</b>\n\n` +
-            `Abre la app para verlas. 🎯`,
-        );
-      }
-    } catch (error) {
-      console.error("[Telegram] Error associating to brain:", error);
-      await sendMessage(chatId, `❌ Error al agregar las tareas. Intenta de nuevo.`);
-    }
-    return;
-  }
-
-  await answerCallbackQuery(query.id, "Opción no reconocida");
 }
