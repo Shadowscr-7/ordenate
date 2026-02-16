@@ -550,11 +550,38 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
       return;
     }
 
-    // 3. Split extracted text by line breaks, or use entire text if no line breaks
-    const taskLines = extractedText
+    // 3. Group lines by asterisk: asterisk starts new task, lines without asterisk continue previous task
+    const lines = extractedText
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0);
+
+    const taskLines: string[] = [];
+    let currentTask = "";
+
+    for (const line of lines) {
+      if (line.startsWith("*")) {
+        // New task starts
+        if (currentTask) {
+          taskLines.push(currentTask.trim());
+        }
+        // Remove leading asterisk and whitespace
+        currentTask = line.replace(/^\*\s*/, "");
+      } else {
+        // Continuation of current task
+        if (currentTask) {
+          currentTask += " " + line;
+        } else {
+          // Line without asterisk at the beginning (no previous task)
+          currentTask = line;
+        }
+      }
+    }
+
+    // Add last task
+    if (currentTask) {
+      taskLines.push(currentTask.trim());
+    }
 
     if (taskLines.length === 0) {
       await sendMessage(
@@ -564,24 +591,7 @@ async function handlePhotoMessage(chatId: number, fileId: string, _caption: stri
       return;
     }
 
-    // If many tasks detected, ask user: backlog or brain dump?
-    if (taskLines.length >= MANY_TASKS_THRESHOLD) {
-      setPendingSession(chatId, taskLines, "IMAGE");
-      await sendMessageWithKeyboard(
-        chatId,
-        `📷 <b>Detecté ${taskLines.length} tareas de la imagen</b>\n\n` +
-          `¿Qué deseas hacer?`,
-        [
-          [
-            { text: "📋 Crear en Backlog", callback_data: "photo_backlog" },
-            { text: "🧠 Crear Brain Dump", callback_data: "photo_braindump" },
-          ],
-        ],
-      );
-      return;
-    }
-
-    // If few tasks, create directly in backlog
+    // Create tasks directly in backlog from image
     await db.backlogTask.createMany({
       data: taskLines.map((taskText, index) => ({
         text: taskText,
